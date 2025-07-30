@@ -1,0 +1,62 @@
+// ===============================
+// TIGRIZIO VIDEO GENERATOR - SERVER
+// ===============================
+
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// ===============================
+// MIDDLEWARES
+// ===============================
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../frontend')));
+app.use('/assets', express.static(path.join(__dirname, '../assets')));
+
+// ===============================
+// RUTAS BÁSICAS
+// ===============================
+
+// Ruta principal
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+// Ruta de salud del servidor
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        message: 'Tigrizio Server está funcionando correctamente',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+    });
+});
+
+// ===============================
+// INICIAR SERVIDOR
+// ===============================
+app.listen(PORT, () => {
+    console.log('🐅 ===============================');
+    console.log('🐅 TIGRIZIO VIDEO GENERATOR');
+    console.log('🐅 ===============================');
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log(`🌐 Frontend: http://localhost:${PORT}`);
+    console.log(`🔧 API Health: http://localhost:${PORT}/api/health`);
+    console.log('🐅 ===============================');
+});
+
+// ===============================
+// MANEJO DE ERRORES
+// ===============================
+process.on('uncaughtException', (error) => {
+    console.error('❌ Error no capturado:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Promesa rechazada:', reason);
+});
