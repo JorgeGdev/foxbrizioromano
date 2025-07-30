@@ -1,26 +1,59 @@
 // ===============================
-// TIGRIZIO FRONTEND - API INTEGRATION
+// TIGRIZIO FRONTEND - CON SSE (SERVER-SENT EVENTS)
+// Más simple y confiable que WebSockets
 // ===============================
 
 // Configuration
 const API_BASE_URL = 'http://localhost:3000/api';
 
+// SSE connection
+let eventSource = null;
+
 // Global variables
 let selectedPresenter = null;
 let currentSessionId = null;
-let isAutoScrapingActive = false;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
+    initializeSSE();
     initializeDashboard();
     setupEventListeners();
     loadStats();
     checkConnection();
 });
 
+// ===============================
+// SSE INITIALIZATION (MÁS SIMPLE QUE WEBSOCKETS)
+// ===============================
+
+function initializeSSE() {
+    try {
+        eventSource = new EventSource('/api/logs');
+        
+        eventSource.onopen = function() {
+            addLog('SSE', 'Conectado - Logs en tiempo real activados', 'success');
+            updateConnectionStatus('connected');
+        };
+        
+        eventSource.onmessage = function(event) {
+            const logData = JSON.parse(event.data);
+            addLog(logData.category, logData.message, logData.type);
+        };
+        
+        eventSource.onerror = function() {
+            addLog('SSE', 'Error de conexión SSE', 'error');
+            updateConnectionStatus('disconnected');
+        };
+        
+    } catch (error) {
+        console.error('Error inicializando SSE:', error);
+        addLog('ERROR', 'Error inicializando logs en tiempo real', 'error');
+    }
+}
+
 function initializeDashboard() {
-    addLog('SYSTEM', 'Dashboard initialized successfully', 'info');
-    selectPresenter(1); // Select first presenter by default
+    addLog('SYSTEM', 'Dashboard inicializado - Esperando conexión SSE...', 'info');
+    selectPresenter(1);
 }
 
 function setupEventListeners() {
@@ -34,10 +67,6 @@ function setupEventListeners() {
 
     // Generate video button
     document.getElementById('generateBtn').addEventListener('click', generateVideo);
-
-    // Scraping controls
-    document.getElementById('toggleScrapingBtn').addEventListener('click', toggleAutoScraping);
-    document.getElementById('manualScrapingBtn').addEventListener('click', performManualScraping);
 
     // Enter key on keyword input
     document.getElementById('keywordInput').addEventListener('keypress', function(e) {
@@ -68,7 +97,7 @@ function setupEventListeners() {
 
 async function apiCall(endpoint, method = 'GET', data = null) {
     try {
-        addLog('API', `Calling ${endpoint}...`, 'info');
+        
         
         const options = {
             method: method,
@@ -85,14 +114,14 @@ async function apiCall(endpoint, method = 'GET', data = null) {
         const result = await response.json();
         
         if (response.ok) {
-            addLog('API', `${endpoint} completed successfully`, 'success');
+            
             return { success: true, data: result };
         } else {
-            addLog('API', `${endpoint} failed: ${result.error}`, 'error');
+            addLog('API', `${endpoint} falló: ${result.error}`, 'error');
             return { success: false, error: result.error, suggestions: result.suggestions };
         }
     } catch (error) {
-        addLog('API', `${endpoint} network error: ${error.message}`, 'error');
+        addLog('API', `${endpoint} error: ${error.message}`, 'error');
         updateConnectionStatus('disconnected');
         return { success: false, error: error.message };
     }
@@ -110,29 +139,29 @@ function selectPresenter(number) {
     document.querySelector(`[data-presenter="${number}"]`).classList.add('selected');
     selectedPresenter = number;
     
-    addLog('USER', `Selected Tigrizio ${number} as presenter`, 'info');
+    addLog('USER', `Seleccionado Tigrizio ${number}`, 'info');
 }
 
 async function generateVideo() {
     const keyword = document.getElementById('keywordInput').value.trim();
     
     if (!selectedPresenter) {
-        addLog('ERROR', 'Please select a presenter first', 'error');
+        addLog('ERROR', 'Selecciona un presentador primero', 'error');
         return;
     }
     
     if (!keyword) {
-        addLog('ERROR', 'Please enter a keyword or topic', 'error');
+        addLog('ERROR', 'Ingresa una palabra clave', 'error');
         return;
     }
     
     if (keyword.length < 2) {
-        addLog('ERROR', 'Keyword must be at least 2 characters', 'error');
+        addLog('ERROR', 'Palabra clave muy corta (mínimo 2 caracteres)', 'error');
         return;
     }
 
     setGenerating(true);
-    addLog('GENERATOR', `Starting video generation: Tigrizio${selectedPresenter}@${keyword}`, 'info');
+    addLog('GENERATOR', `Iniciando: Tigrizio${selectedPresenter}@${keyword}`, 'info');
     
     const result = await apiCall('/generate-video', 'POST', {
         presenter: selectedPresenter,
@@ -149,7 +178,7 @@ async function generateVideo() {
             result.data.script.text,
             result.data.script.wordCount
         );
-        addLog('STEP-1', `Found tweets and generated script (${result.data.script.wordCount} words)`, 'success');
+        addLog('APPROVAL', `Script (${result.data.script.wordCount} palabras) - Esperando aprobación`, 'warning');
     } else {
         addLog('ERROR', result.error, 'error');
         if (result.suggestions) {
@@ -168,28 +197,24 @@ function showScriptApproval(presenter, keyword, script, wordCount) {
     
     document.getElementById('scriptApprovalSection').classList.remove('d-none');
     
-    addLog('APPROVAL', 'Script generated - Waiting for your approval', 'warning');
-    addLog('SCRIPT', `Generated ${wordCount} words script`, 'info');
+    addLog('SCRIPT', `Script de ${wordCount} palabras listo`, 'info');
 }
 
 async function approveScript() {
     if (!currentSessionId) return;
     
     hideScriptApproval();
-    addLog('APPROVAL', 'Script approved - Starting video generation', 'success');
+    addLog('APPROVAL', 'Script aprobado por el usuario', 'success');
     
     const result = await apiCall(`/approve/${currentSessionId}`, 'POST');
     
     if (result.success) {
-        addLog('STEP-3', 'Creating audio with ElevenLabs...', 'info');
-        addLog('STEP-4', 'Generating video with Hedra AI (8-10 minutes)...', 'info');
-        addLog('INFO', result.data.message, 'success');
+        addLog('PIPELINE', 'Generación REAL iniciada - Logs en tiempo real', 'info');
+        // Los logs del proceso vendrán por SSE automáticamente
         
-        // Simulate completion after estimated time
         setTimeout(() => {
-            addLog('COMPLETED', 'Video generation completed successfully!', 'success');
             updateStats();
-        }, 10000);
+        }, 15000);
     } else {
         addLog('ERROR', result.error, 'error');
     }
@@ -201,7 +226,7 @@ async function rejectScript() {
     if (!currentSessionId) return;
     
     hideScriptApproval();
-    addLog('APPROVAL', 'Script rejected - Regenerating...', 'warning');
+    addLog('APPROVAL', 'Script rechazado - Regenerando', 'warning');
     
     const result = await apiCall(`/reject/${currentSessionId}`, 'POST');
     
@@ -212,7 +237,7 @@ async function rejectScript() {
             result.data.script.text,
             result.data.script.wordCount
         );
-        addLog('STEP-2', 'New script generated successfully', 'success');
+        addLog('REGENERATION', 'Nuevo script generado', 'success');
     } else {
         addLog('ERROR', result.error, 'error');
         currentSessionId = null;
@@ -220,7 +245,7 @@ async function rejectScript() {
 }
 
 async function regenerateScript() {
-    await rejectScript(); // Same logic as reject
+    await rejectScript();
 }
 
 async function cancelGeneration() {
@@ -234,7 +259,7 @@ async function cancelGeneration() {
     const result = await apiCall(`/cancel/${currentSessionId}`, 'POST');
     
     if (result.success) {
-        addLog('APPROVAL', 'Generation cancelled - No tokens spent', 'info');
+        addLog('APPROVAL', 'Generación cancelada', 'info');
     } else {
         addLog('ERROR', result.error, 'error');
     }
@@ -244,60 +269,6 @@ async function cancelGeneration() {
 
 function hideScriptApproval() {
     document.getElementById('scriptApprovalSection').classList.add('d-none');
-}
-
-async function toggleAutoScraping() {
-    const newState = !isAutoScrapingActive;
-    
-    const result = await apiCall('/toggle-scraping', 'POST', { enable: newState });
-    
-    if (result.success) {
-        isAutoScrapingActive = newState;
-        updateScrapingUI();
-        addLog('SCRAPING', result.data.message, 'success');
-    } else {
-        addLog('ERROR', result.error, 'error');
-    }
-}
-
-function updateScrapingUI() {
-    const btn = document.getElementById('toggleScrapingBtn');
-    const status = document.getElementById('scrapingStatus');
-    const statusText = document.getElementById('scrapingStatusText');
-    
-    if (isAutoScrapingActive) {
-        btn.textContent = 'Disable Auto Scraping';
-        btn.classList.remove('btn-tigrizio');
-        btn.classList.add('btn-secondary-tigrizio');
-        status.className = 'status-indicator status-active';
-        statusText.textContent = 'Active (Every 3h)';
-    } else {
-        btn.textContent = 'Enable Auto Scraping';
-        btn.classList.remove('btn-secondary-tigrizio');
-        btn.classList.add('btn-tigrizio');
-        status.className = 'status-indicator status-inactive';
-        statusText.textContent = 'Inactive';
-    }
-}
-
-async function performManualScraping() {
-    const btn = document.getElementById('manualScrapingBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner me-2"></span>Scraping...';
-    
-    addLog('SCRAPING', 'Starting manual scraping...', 'info');
-    
-    const result = await apiCall('/manual-scraping', 'POST');
-    
-    btn.disabled = false;
-    btn.textContent = 'Manual Scraping';
-    
-    if (result.success) {
-        addLog('SCRAPING', `Completed: ${result.data.newTweetsSaved} new tweets, ${result.data.vipTweetsDetected} VIP`, 'success');
-        await loadStats(); // Refresh stats
-    } else {
-        addLog('ERROR', result.error, 'error');
-    }
 }
 
 async function loadStats() {
@@ -310,45 +281,8 @@ async function loadStats() {
         animateNumber('vipTweets', stats.vipTweets);
         animateNumber('activeSessions', stats.activeSessions);
         animateNumber('videosGenerated', stats.videosGenerated || 0);
-        
-        // Update scraping status
-        isAutoScrapingActive = stats.isAutoScrapingActive;
-        updateScrapingUI();
-        
-        addLog('STATS', 'Statistics updated successfully', 'success');
     } else {
-        addLog('ERROR', `Failed to load stats: ${result.error}`, 'error');
-    }
-}
-
-async function loadVipTweets() {
-    addLog('API', 'Loading VIP tweets...', 'info');
-    
-    const result = await apiCall('/vip-tweets');
-    
-    if (result.success) {
-        result.data.tweets.forEach((tweet, index) => {
-            addLog(`VIP-${index + 1}`, `[${tweet.keyword?.toUpperCase()}] ${tweet.content}`, 'success');
-        });
-        addLog('API', 'VIP tweets loaded successfully', 'success');
-    } else {
-        addLog('ERROR', result.error, 'error');
-    }
-}
-
-async function loadRecentTweets() {
-    addLog('API', 'Loading recent tweets...', 'info');
-    
-    const result = await apiCall('/recent-tweets');
-    
-    if (result.success) {
-        result.data.tweets.forEach((tweet, index) => {
-            const vipIcon = tweet.isVip ? '[VIP]' : '';
-            addLog(`RECENT-${index + 1}`, `${vipIcon} ${tweet.content} (${tweet.hoursAgo}h ago)`, 'info');
-        });
-        addLog('API', 'Recent tweets loaded successfully', 'success');
-    } else {
-        addLog('ERROR', result.error, 'error');
+        addLog('ERROR', `Error cargando estadísticas: ${result.error}`, 'error');
     }
 }
 
@@ -359,10 +293,9 @@ async function checkConnection() {
     
     if (result.success) {
         updateConnectionStatus('connected');
-        addLog('SYSTEM', 'Connected to Tigrizio backend', 'success');
     } else {
         updateConnectionStatus('disconnected');
-        addLog('SYSTEM', 'Failed to connect to backend', 'error');
+        addLog('SYSTEM', 'Error conectando al backend', 'error');
     }
 }
 
@@ -441,7 +374,6 @@ function animateNumber(elementId, targetNumber) {
 }
 
 function updateStats() {
-    // Force refresh stats after operations
     setTimeout(loadStats, 1000);
 }
 
@@ -452,20 +384,16 @@ function updateStats() {
 // Auto-refresh stats every 2 minutes
 setInterval(loadStats, 120000);
 
-// Check connection every 30 seconds
-setInterval(() => {
-    apiCall('/health').then(result => {
-        if (result.success) {
-            updateConnectionStatus('connected');
-        } else {
-            updateConnectionStatus('disconnected');
-        }
-    });
-}, 30000);
 
 // ===============================
-// GLOBAL ERROR HANDLER
+// CLEANUP
 // ===============================
+
+window.addEventListener('beforeunload', () => {
+    if (eventSource) {
+        eventSource.close();
+    }
+});
 
 window.addEventListener('error', function(e) {
     addLog('ERROR', `JavaScript error: ${e.message}`, 'error');
@@ -474,3 +402,22 @@ window.addEventListener('error', function(e) {
 window.addEventListener('unhandledrejection', function(e) {
     addLog('ERROR', `Unhandled promise rejection: ${e.reason}`, 'error');
 });
+
+
+// ===============================
+// LOGOUT FUNCTION
+// ===============================
+async function logout() {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+    } catch (error) {
+        console.error('Error en logout:', error);
+        // Forzar redirect aunque falle
+        window.location.href = '/login';
+    }
+}
+
+function goToAdmin() {
+    window.location.href = '/admin';
+}

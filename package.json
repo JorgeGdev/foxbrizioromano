@@ -4,10 +4,10 @@
   "description": "Sistema automático de generación de videos de fútbol con tweets de Fabrizio Romano",
   "main": "backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
+    "start": "node backend/web-server.js",
     "dev": "node backend/server.js",
-    "bot": "node backend/start-bot.js",
-    "railway-start": "node backend/start-bot.js"
+    "web": "node backend/web-server.js",
+    "bot": "node backend/telegram-bot.js"
   },
   "keywords": [
     "football",

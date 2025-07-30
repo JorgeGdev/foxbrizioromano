@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tigrizio - AI Video Generator Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link href="style2.css" rel="stylesheet" />
+
+    <!-- Custom CSS -->
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">TIGRIZIO</a>
+        <div class="d-flex align-items-center">
+          <span class="status-indicator" id="connectionStatus"></span>
+          <span id="connectionText">Connecting...</span>
+          <button
+            class="btn btn-sm btn-outline-light me-2"
+            onclick="goToAdmin()"
+          >
+            👑 Admin
+          </button>
+          <button class="btn btn-sm btn-outline-light" onclick="logout()">
+            🚪 Logout
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Dashboard Section -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-12">
+            <!-- Stats Grid -->
+            <div class="stats-grid mb-5">
+              <div class="stat-card">
+                <div class="stat-number" id="totalTweets">0</div>
+                <div class="stat-label">Total Tweets</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="vipTweets">0</div>
+                <div class="stat-label">VIP Tweets</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="activeSessions">0</div>
+                <div class="stat-label">Active Sessions</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="videosGenerated">0</div>
+                <div class="stat-label">Videos Generated</div>
+              </div>
+            </div>
+
+            <div class="row g-4">
+              <!-- Video Generator -->
+              <div class="col-lg-6">
+                <div class="dashboard-card p-4 h-100">
+                  <h3 class="section-title">Video Generator</h3>
+
+                  <!-- Presenter Selection -->
+                  <div class="mb-4">
+                    <label class="form-label">Select Presenter</label>
+                    <div class="presenter-grid">
+                      <div class="presenter-card" data-presenter="1">
+                        <div class="fw-bold">Tigrizio 1</div>
+                      </div>
+                      <div class="presenter-card" data-presenter="2">
+                        <div class="fw-bold">Tigrizio 2</div>
+                      </div>
+                      <div class="presenter-card" data-presenter="3">
+                        <div class="fw-bold">Tigrizio 3</div>
+                      </div>
+                      <div class="presenter-card" data-presenter="4">
+                        <div class="fw-bold">Tigrizio 4</div>
+                      </div>
+                      <div class="presenter-card" data-presenter="5">
+                        <div class="fw-bold">Tigrizio 5</div>
+                      </div>
+                      <div class="presenter-card" data-presenter="6">
+                        <div class="fw-bold">Tigrizio 6</div>
+                      </div>
+                      <div class="presenter-card" data-presenter="7">
+                        <div class="fw-bold">Tigrizio 7</div>
+                      </div>
+                      <div class="presenter-card" data-presenter="8">
+                        <div class="fw-bold">Tigrizio 8</div>
+                      </div>
+                      <div class="presenter-card" data-presenter="9">
+                        <div class="fw-bold">Tigrizio 9</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Keyword Input -->
+                  <div class="mb-4">
+                    <label class="form-label">Keyword/Topic</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="keywordInput"
+                      placeholder="e.g., Haaland, Real Madrid, transfer news"
+                    />
+                    <small class="text-muted"
+                      >Enter player names, clubs, or football topics</small
+                    >
+                  </div>
+
+                  <!-- Generate Button -->
+                  <button class="btn btn-tigrizio w-100" id="generateBtn">
+                    <span id="generateText">Generate Video</span>
+                    <span
+                      id="generateSpinner"
+                      class="loading-spinner d-none ms-2"
+                    ></span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Scraping Control -->
+              <div class="col-lg-6">
+                <div class="dashboard-card p-4 h-100">
+                  <h3 class="section-title">Scraping Control</h3>
+
+                  <div class="mb-4">
+                    <div
+                      class="d-flex justify-content-between align-items-center mb-3"
+                    >
+                      <span>Auto Scraping</span>
+                      <div class="d-flex align-items-center">
+                        <span
+                          class="status-indicator"
+                          id="scrapingStatus"
+                        ></span>
+                        <span id="scrapingStatusText">Inactive</span>
+                      </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                      <button class="btn btn-tigrizio" id="toggleScrapingBtn">
+                        Enable Auto Scraping
+                      </button>
+                      <button
+                        class="btn btn-secondary-tigrizio"
+                        id="manualScrapingBtn"
+                      >
+                        Manual Scraping
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="mb-4">
+                    <h5>Recent Actions</h5>
+                    <div class="d-grid gap-2">
+                      <button
+                        class="btn btn-secondary-tigrizio btn-sm"
+                        onclick="loadStats()"
+                      >
+                        Refresh Stats
+                      </button>
+                      <button
+                        class="btn btn-secondary-tigrizio btn-sm"
+                        onclick="loadVipTweets()"
+                      >
+                        View VIP Tweets
+                      </button>
+                      <button
+                        class="btn btn-secondary-tigrizio btn-sm"
+                        onclick="loadRecentTweets()"
+                      >
+                        View Recent Tweets
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Script Approval (Hidden by default) -->
+              <div class="col-12 d-none" id="scriptApprovalSection">
+                <div class="dashboard-card p-4">
+                  <h3 class="section-title">Script Approval Required</h3>
+
+                  <div class="mb-3">
+                    <strong>Presenter:</strong>
+                    <span id="approvalPresenter"></span> |
+                    <strong>Keyword:</strong>
+                    <span id="approvalKeyword"></span> |
+                    <strong>Words:</strong> <span id="approvalWordCount"></span>
+                  </div>
+
+                  <div
+                    class="mb-4 p-3"
+                    style="background: rgba(0, 0, 0, 0.5); border-radius: 10px"
+                  >
+                    <h5>Generated Script:</h5>
+                    <p id="approvalScript" style="font-style: italic"></p>
+                  </div>
+
+                  <div class="approval-buttons">
+                    <button
+                      class="approval-btn btn-approve"
+                      onclick="approveScript()"
+                    >
+                      Approve - Generate Video
+                    </button>
+                    <button
+                      class="approval-btn btn-reject"
+                      onclick="rejectScript()"
+                    >
+                      Reject - Regenerate
+                    </button>
+                    <button
+                      class="approval-btn btn-regenerate"
+                      onclick="regenerateScript()"
+                    >
+                      Regenerate Script
+                    </button>
+                    <button
+                      class="approval-btn btn-cancel"
+                      onclick="cancelGeneration()"
+                    >
+                      Cancel Everything
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Real-time Logs -->
+              <div class="col-12">
+                <div class="dashboard-card p-4">
+                  <h3 class="section-title">System Logs</h3>
+                  <div class="logs-container" id="logsContainer">
+                    <div class="log-entry log-info">
+                      <strong>[SYSTEM]</strong> Tigrizio Dashboard initialized
+                    </div>
+                    <div class="log-entry log-info">
+                      <strong>[INFO]</strong> Waiting for user actions...
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
