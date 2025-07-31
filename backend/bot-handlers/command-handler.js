@@ -61,6 +61,11 @@ class CommandHandler {
       await this.handleSessions(msg.chat.id);
     });
 
+    // ✅ COMANDO /urgent - SCRAPING URGENTE
+    this.bot.bot.onText(/\/urgent/, async (msg) => {
+        await this.handleUrgentScraping(msg.chat.id);
+    });
+
     console.log('✅ Comandos configurados');
   }
 
@@ -291,7 +296,7 @@ class CommandHandler {
   }
 
   // ===============================
-  // COMANDO /sessions (NUEVO)
+  // COMANDO /sessions
   // ===============================
   async handleSessions(chatId) {
     try {
@@ -321,6 +326,55 @@ class CommandHandler {
     } catch (error) {
       console.error('❌ Error en /sessions:', error);
       await this.bot.sendMessage(chatId, BotMessages.getErrorMessage(error.message));
+    }
+  }
+
+  // ===============================
+  // COMANDO /urgent - SCRAPING URGENTE
+  // ===============================
+  async handleUrgentScraping(chatId) {
+    try {
+      await this.bot.sendMessage(chatId, "🚨 **SCRAPING URGENTE INICIADO**\n\n⏰ Buscando tweets de últimas 12 horas...");
+      
+      // Usar el scraper existente con parámetros específicos para urgente
+      const tweets = await this.bot.scraper.getRecentTweets(12);
+      
+      if (!tweets || tweets.length === 0) {
+        await this.bot.sendMessage(chatId, 
+          "📭 **No hay tweets nuevos**\n\nNo se encontraron tweets en las últimas 12 horas.");
+        return;
+      }
+
+      let savedCount = 0;
+      let vipCount = 0;
+
+      for (const tweet of tweets) {
+        const vipInfo = this.bot.scraper.isVipTweet(tweet.originalText);
+        const saveResult = await this.bot.db.saveTweet(tweet, vipInfo);
+        
+        if (saveResult.success) {
+          savedCount++;
+          if (saveResult.isVip) vipCount++;
+        }
+      }
+
+      const summary = `🚨 **SCRAPING URGENTE COMPLETADO**
+
+📊 **Resultados últimas 12h:**
+• 🆕 ${savedCount} tweets nuevos
+• 🚨 ${vipCount} tweets VIP
+• ⏰ Scraping completo en tiempo real
+
+💡 **Próximos pasos:**
+• Usa \`tigrizio[1-9]@keyword\` para generar videos
+• Revisa /vip para noticias urgentes`;
+
+      await this.bot.sendMessage(chatId, summary);
+
+    } catch (error) {
+      console.error('❌ Error en /urgent:', error);
+      await this.bot.sendMessage(chatId, 
+        `❌ **Error en scraping urgente:** ${error.message}`);
     }
   }
 }

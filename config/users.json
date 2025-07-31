@@ -6,7 +6,7 @@
     "password": "$2b$10$Pzt2eW9lwU9y370Mmn0PVe2UZRMRYD23qccZKMu9w.PmAqg2yWV9y",
     "role": "user",
     "createdAt": "2025-07-30T03:47:36.815Z",
-    "lastLogin": "2025-07-30T04:03:34.081Z",
+    "lastLogin": "2025-07-30T22:29:41.416Z",
     "active": true
   },
   {
@@ -16,7 +16,7 @@
     "password": "$2b$10$xa7DJmp53NM7QkdtDjiNguFgK/jInAodukNK0GDKwiYaL7/E7lmPa",
     "role": "admin",
     "createdAt": "2025-07-30T03:47:36.744Z",
-    "lastLogin": "2025-07-30T04:05:38.243Z",
+    "lastLogin": "2025-07-30T22:42:27.850Z",
     "active": true
   }
 ]

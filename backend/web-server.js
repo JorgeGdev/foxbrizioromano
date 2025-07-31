@@ -166,6 +166,13 @@ app.get('/api/auth/verify', (req, res) => {
 });
 
 // ===============================
+// RUTA ACCESS-DENIED (SOLUCIÓN)
+// ===============================
+app.get('/access-denied', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/access-denied.html'));
+});
+
+// ===============================
 // RUTAS PROTEGIDAS (CON AUTENTICACIÓN)
 // ===============================
 

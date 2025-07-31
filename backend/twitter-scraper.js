@@ -79,6 +79,43 @@ class TwitterScraper {
     }
 
     // ===============================
+    // PROCESAR TWEETS (MÉTODO AUXILIAR REUTILIZABLE)
+    // ===============================
+    processTweets(tweets) {
+        if (!tweets || tweets.length === 0) {
+            return [];
+        }
+
+        const processedTweets = [];
+        
+        for (const tweet of tweets) {
+            try {
+                const originalText = tweet.text || '';
+                const cleanText = this.cleanTweetText(originalText);
+                
+                // Solo incluir tweets con contenido útil
+                if (cleanText.length > 10) {
+                    const tweetData = {
+                        id: tweet.id?.toString() || '',
+                        text: cleanText,
+                        originalText: originalText,
+                        createdAt: new Date(tweet.createdAt || Date.now()),
+                        retweets: tweet.retweetCount || 0,
+                        likes: tweet.likeCount || 0,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    processedTweets.push(tweetData);
+                }
+            } catch (error) {
+                console.error(`❌ Error procesando tweet individual:`, error.message);
+            }
+        }
+
+        return processedTweets;
+    }
+
+    // ===============================
     // OBTENER MÚLTIPLES TWEETS CON 1 LLAMADA (TU MEGA OPTIMIZACIÓN!)
     // ===============================
     async getMultipleTweets(count = 15) {
@@ -107,37 +144,66 @@ class TwitterScraper {
 
             console.log(`✅ ${data.tweets.length} tweets obtenidos de la API`);
             
-            // Procesar todos los tweets
-            const processedTweets = [];
-            
-            for (const tweet of data.tweets) {
-                try {
-                    const originalText = tweet.text || '';
-                    const cleanText = this.cleanTweetText(originalText);
-                    
-                    // Solo incluir tweets con contenido útil
-                    if (cleanText.length > 10) {
-                        const tweetData = {
-                            id: tweet.id?.toString() || '',
-                            text: cleanText,
-                            originalText: originalText,
-                            createdAt: new Date(tweet.createdAt || Date.now()),
-                            retweets: tweet.retweetCount || 0,
-                            likes: tweet.likeCount || 0,
-                            timestamp: new Date().toISOString()
-                        };
-                        
-                        processedTweets.push(tweetData);
-                    }
-                } catch (error) {
-                    console.error(`❌ Error procesando tweet individual:`, error.message);
-                }
-            }
-
-            return processedTweets;
+            // Usar el método processTweets reutilizable
+            return this.processTweets(data.tweets);
 
         } catch (error) {
             console.error('❌ Error obteniendo múltiples tweets:', error.message);
+            if (error.response) {
+                console.error('📊 Status:', error.response.status);
+                console.error('📝 Response:', error.response.data);
+            }
+            return [];
+        }
+    }
+
+    // ===============================
+    // OBTENER TWEETS RECIENTES (PARA COMANDO /urgent)
+    // ===============================
+    async getRecentTweets(hours = 12) {
+        try {
+            console.log(`🚨 Scraping últimas ${hours} horas para comando urgente...`);
+            
+            // Calcular fecha límite
+            const sinceDate = new Date(Date.now() - hours * 60 * 60 * 1000);
+            console.log(`📅 Buscando tweets desde: ${sinceDate.toISOString()}`);
+            
+            const response = await axios.get(`${this.baseUrl}/twitter/tweet/advanced_search`, {
+                headers: this.headers,
+                params: {
+                    query: 'from:FabrizioRomano -is:retweet',
+                    queryType: 'Latest',
+                    count: 50, // Más tweets para capturar todo de las últimas 12h
+                    since: sinceDate.toISOString()
+                }
+            });
+
+            if (response.status !== 200) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const data = response.data;
+            
+            if (!data.tweets || data.tweets.length === 0) {
+                console.log(`❌ No se encontraron tweets en las últimas ${hours} horas`);
+                return [];
+            }
+
+            console.log(`✅ ${data.tweets.length} tweets encontrados en últimas ${hours}h`);
+            
+            // Filtrar tweets por fecha para asegurar que están dentro del rango
+            const filteredTweets = data.tweets.filter(tweet => {
+                const tweetDate = new Date(tweet.createdAt);
+                return tweetDate >= sinceDate;
+            });
+
+            console.log(`🔍 ${filteredTweets.length} tweets después de filtro temporal`);
+            
+            // Usar el método processTweets reutilizable
+            return this.processTweets(filteredTweets);
+
+        } catch (error) {
+            console.error(`❌ Error en scraping de últimas ${hours}h:`, error.message);
             if (error.response) {
                 console.error('📊 Status:', error.response.status);
                 console.error('📝 Response:', error.response.data);

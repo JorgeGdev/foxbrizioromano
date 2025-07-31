@@ -218,34 +218,42 @@ Para el frontend web, Railway asignará un dominio automático.
 
 ## 📁 Estructura del Proyecto
 
-```
 tigrizio/
 ├── backend/
-│   ├── server.js                 # Servidor Express
-│   ├── start-bot.js             # Iniciador del bot
-│   ├── telegram-bot.js          # Bot principal
-│   ├── twitter-scraper.js       # Scraper optimizado
-│   ├── script-generator.js      # Generador de scripts IA
-│   ├── voice-generator.js       # Síntesis de voz
-│   ├── audio-processor.js       # Procesador de audio
-│   ├── image-processor.js       # Procesador de imágenes
-│   ├── video-generator.js       # Generador de videos
-│   └── supabase-manager.js      # Manejo de base de datos
+│   ├── bot-handlers/
+│   │   ├── approval-handler.js      # ✅ Validación de scripts
+│   │   ├── command-handler.js       # ⚡ /start, /stats, etc.
+│   │   ├── message-handler.js       # 💬 tigrizio[1-9]@keyword
+│   │   └── video-pipeline.js        # 🎬 Pipeline generación
+│   ├── utils/
+│   │   ├── bot-messages.js          # 📋 Templates de mensajes
+│   │   └── session-manager.js       # 📋 Gestión de sesiones
+│   ├── telegram-bot.js              # 🤖 Bot principal
+│   ├── twitter-scraper.js           # 🐦 Scraping optimizado
+│   ├── script-generator.js          # 🧠 OpenAI GPT-4
+│   ├── voice-generator.js           # 🔊 ElevenLabs
+│   ├── video-generator.js           # 🎞️ Hedra AI
+│   ├── audio-processor.js           # 🔊 Procesamiento audio
+│   ├── image-processor.js           # 📸 Procesamiento imágenes
+│   ├── supabase-manager.js          # 🗄️ Base de datos
+│   ├── auth-manager.js              # 🔐 JWT auth
+│   ├── web-server.js                # 🌐 Web con autenticación
+│   ├── server.js                    # 🌐 Web (bot mode)
+│   └── combined-server.js           # 🚀 Servidor unificado
 ├── frontend/
-│   ├── index.html               # Dashboard web
-│   ├── style.css                # Estilos
-│   └── app.js                   # Lógica frontend
+│   ├── login.html                   # 🔐 Login web
+│   ├── dashboard.html               # 📊 Dashboard
+│   ├── admin.html                   # 👑 Panel admin
+│   └── access-denied.html           # 🛡️ Acceso denegado
 ├── assets/
-│   ├── images/                  # Presentadores (tigrizio1-9.png)
-│   ├── audio/                   # Audios generados
-│   ├── videos/                  # Videos finales
-│   └── captions/                # Captions para redes
-├── database/
-│   └── schema.sql               # Schema de Supabase
-├── package.json
-├── README.md
-└── .env                         # Variables de entorno
-```
+│   ├── images/tigrizio[1-9].png     # 🎭 Presentadores
+│   ├── audio/                       # 🔊 Audios generados
+│   ├── videos/                      # 🎬 Videos finales
+│   └── captions/                    # 📝 Captions virales
+├── database/schema.sql              # 🗃️ Schema Supabase
+├── package.json                     # 📦 Dependencias
+├── .env.example                     # 🔑 Template variables
+└── README.md                        # 📖 Este archivo
 
 ---
 
@@ -275,6 +283,20 @@ tigrizio/
 - **Uptime**: 99.9% en Railway
 
 ---
+
+-- Ejecutar en Supabase:
+CREATE TABLE fabrizio_tweets (
+    id SERIAL PRIMARY KEY,
+    tweet_id TEXT UNIQUE,
+    content TEXT NOT NULL,
+    original_content TEXT,
+    tweet_created_at TIMESTAMP,
+    likes INTEGER DEFAULT 0,
+    retweets INTEGER DEFAULT 0,
+    is_vip BOOLEAN DEFAULT FALSE,
+    vip_keyword TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
 ## 🤝 Contribuir
 

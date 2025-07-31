@@ -8,6 +8,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const TigrizioAudioProcessor = require("./audio-processor");
 const TigrizioImageProcessor = require("./image-processor");
+const OpenAI = require('openai'); 
 require("dotenv").config();
 
 class TigrizioVideoGenerator {
@@ -16,6 +17,9 @@ class TigrizioVideoGenerator {
     this.chatId = process.env.TELEGRAM_CHAT_ID;
     this.botToken = process.env.TELEGRAM_BOT_TOKEN;
     this.baseUrl = "https://api.hedra.com/web-app/public";
+    this.openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
     this.audioProcessor = new TigrizioAudioProcessor();
     this.imageProcessor = new TigrizioImageProcessor();
@@ -23,41 +27,121 @@ class TigrizioVideoGenerator {
     console.log("🎬 Tigrizio Video Generator (Robusto) iniciado");
   }
 
+
   // ===============================
-  // GENERAR CAPTION PARA REDES SOCIALES
-  // ===============================
-  generarCaption(script, imageName) {
-    const hashtags = [
-      "#TigrizioRomano",
-      "#FutbolNoticias",
-      "#HereWeGo",
-      "#TransferNews",
-      "#Fichajes",
-      "#FootballNews",
-      "#SportsTalk",
-      "#FabrizioRomano",
-      "#Football",
-    ];
+// GENERAR CAPTION VIRAL CON OPENAI (NUEVO!)
+// ===============================
+async generarCaptionConOpenAI(script, imageName, sessionId) {
+  try {
+    await this.logAndNotify(sessionId, "🤖 Generando caption viral con OpenAI...");
 
-    let caption = `🐅 ¡TIGRIZIO ROMANO EXCLUSIVA!\n\n`;
+    // Prompt épico para caption viral
+    const captionPrompt = `Eres un experto en crear contenido viral para redes sociales (Instagram, TikTok, YouTube Shorts).
 
-    // Agregar parte del script como preview
-    const preview =
-      script.length > 100 ? script.substring(0, 100) + "..." : script;
-    caption += `${preview}\n\n`;
+SCRIPT DE VIDEO DE FÚTBOL:
+"${script}"
 
-    caption += `🎬 Video generado automáticamente con IA\n`;
-    caption += `📰 Basado en noticias reales de @FabrizioRomano\n`;
-    caption += `🎙️ Voz: Gioele Mediterraneo\n`;
-    caption += `📸 Presentador: ${imageName}\n\n`;
+TAREA: Crear un caption súper atractivo y viral para este video de fútbol.
 
-    // Agregar hashtags
-    caption += hashtags.join(" ");
+REQUISITOS OBLIGATORIOS:
+- Hook potente en las primeras palabras que enganche INMEDIATAMENTE
+- Lenguaje natural, como si fueras un creator de fútbol real
+- Genera curiosidad y ganas de comentar
+- Máximo 150 palabras total
+- Exactamente 5 hashtags relevantes y populares
+- Un call-to-action al final que invite a comentar
+- Tono: emocionante, cercano, ligeramente controversial para generar debate
 
-    caption += `\n\n¿Qué opinas de esta noticia? 🤔⚽`;
+ESTILO:
+- Usa emojis estratégicamente (no spam)
+- Preguntas directas al público
+- Frases que generen opiniones divididas
+- Lenguaje de redes actual
 
-    return caption;
+ESTRUCTURA:
+1. HOOK (primera línea super impactante)
+2. DESARROLLO (contexto emocionante)
+3. DEBATE/PREGUNTA (genera controversia sana)
+4. HASHTAGS (5 exactamente)
+5. CTA (call to action)
+
+EJEMPLO DE ESTILO:
+"🚨 ESTO NO LO VIO NADIE VENIR...
+
+[jugador] acaba de hacer el movimiento más inesperado del año. Cuando creías que ya todo estaba decidido en el mercado, aparece ESTA bomba.
+
+¿Genio o locura? ¿El fichaje que cambia todo o el error más caro de la historia?
+
+#TransferNews #Football #BreakingNews #Fichajes #HereWeGo
+
+¿De qué lado estás? 👇"
+
+IMPORTANTE: Solo devuelve el caption final, sin explicaciones.`;
+
+    // Llamar a OpenAI
+    const response = await this.openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "Eres un experto creator de contenido viral de fútbol en redes sociales." },
+        { role: "user", content: captionPrompt }
+      ],
+      temperature: 0.8, // Más creatividad
+      max_tokens: 300
+    });
+
+    const captionGenerated = response.choices[0].message.content.trim();
+
+    await this.logAndNotify(sessionId, `✅ Caption viral generado: ${captionGenerated.length} caracteres`);
+
+    return {
+      success: true,
+      caption: captionGenerated,
+      caracteres: captionGenerated.length,
+      source: 'openai'
+    };
+
+  } catch (error) {
+    console.error(`❌ Error generando caption con OpenAI [${sessionId}]:`, error);
+    await this.logAndNotify(sessionId, `⚠️ Error en caption, usando backup...`);
+
+    // Fallback caption simple si OpenAI falla
+    const backupCaption = `🔥 ${script.substring(0, 50)}...\n\n¿Qué opinas de este movimiento?\n\n#Football #TransferNews #BreakingNews #Fichajes #HereWeGo\n\n¡Comenta tu opinión! 👇`;
+
+    return {
+      success: true,
+      caption: backupCaption,
+      caracteres: backupCaption.length,
+      source: 'fallback'
+    };
   }
+}
+
+// ===============================
+// GENERAR CAPTION PARA REDES SOCIALES (ACTUALIZADO!)
+// ===============================
+async generarCaption(script, imageName, sessionId) {
+  try {
+    // Usar OpenAI para generar caption inteligente
+    const captionResult = await this.generarCaptionConOpenAI(script, imageName, sessionId);
+    
+    if (captionResult.success) {
+      return captionResult.caption;
+    } else {
+      throw new Error('Error generando caption con OpenAI');
+    }
+
+  } catch (error) {
+    console.error('❌ Error en generación de caption:', error);
+    
+    // Fallback caption manual como último recurso
+    return `🚨 ${script.substring(0, 80)}...\n\n¿Qué piensas?\n\n#Football #TransferNews #BreakingNews\n\n¡Comenta! 👇`;
+  }
+}
+
+
+
+
+
 
   // ===============================
   // LOGS DUAL (CONSOLE + TELEGRAM) - TU LÓGICA!
@@ -433,7 +517,7 @@ SINCRONIZACIÓN CRÍTICA: El inicio debe ser fluido, sin cortes bruscos. La boca
           "📱 Generando caption para redes sociales..."
         );
 
-        const captionText = this.generarCaption(script, imageName);
+        const captionText = await this.generarCaption(script, imageName, sessionId);
         const captionFileName = videoFinal.nombreArchivo.replace(
           ".mp4",
           "_caption.txt"

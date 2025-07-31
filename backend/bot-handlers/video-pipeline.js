@@ -1,5 +1,5 @@
 // ===============================
-// TIGRIZIO - VIDEO PIPELINE
+// TIGRIZIO - VIDEO PIPELINE (CORREGIDO)
 // Pipeline completo de generación con validación
 // ===============================
 
@@ -59,7 +59,7 @@ class VideoPipeline {
   }
 
   // ===============================
-  // CONTINUAR DESPUÉS DE APROBACIÓN
+  // CONTINUAR DESPUÉS DE APROBACIÓN (CORREGIDO!)
   // ===============================
   async continueAfterApproval(sessionData, sessionId) {
     const { chatId, scriptResult, imageNumber, keyword } = sessionData;
@@ -67,11 +67,8 @@ class VideoPipeline {
     try {
       console.log(`🚀 Continuando generación aprobada: ${sessionId}`);
 
-      // PASO 3: GENERAR AUDIO CON ELEVENLABS
-      await this.generateAudio(chatId, scriptResult, imageNumber, keyword, sessionId);
-
-      // PASO 4: GENERAR VIDEO COMPLETO
-      await this.generateVideo(chatId, scriptResult, imageNumber, keyword, sessionId);
+      // PASO 3: GENERAR VIDEO COMPLETO (SIN DUPLICAR AUDIO)
+      await this.generateVideoComplete(chatId, scriptResult, imageNumber, keyword, sessionId);
 
     } catch (error) {
       console.error('💥 Error en continuación después de aprobación:', error);
@@ -80,13 +77,16 @@ class VideoPipeline {
   }
 
   // ===============================
-  // GENERAR AUDIO
+  // GENERAR VIDEO COMPLETO (CORREGIDO - SIN DUPLICAR AUDIO!)
   // ===============================
-  async generateAudio(chatId, scriptResult, imageNumber, keyword, sessionId) {
+  async generateVideoComplete(chatId, scriptResult, imageNumber, keyword, sessionId) {
     try {
       const messages = BotMessages.getVideoProcessMessages();
-      await this.bot.sendMessage(chatId, messages.generatingAudio);
+      await this.bot.sendMessage(chatId, messages.generatingVideo);
 
+      // PASO 1: GENERAR AUDIO UNA SOLA VEZ
+      await this.bot.sendMessage(chatId, messages.generatingAudio);
+      
       const audioFileName = `tigrizio_${imageNumber}_${keyword.replace(/\s+/g, "_")}_${Date.now()}`;
       const audioResult = await this.bot.voiceGen.generateAudio(scriptResult.script, audioFileName);
 
@@ -95,37 +95,24 @@ class VideoPipeline {
       }
 
       await this.bot.sendMessage(chatId, messages.audioGenerated(audioResult.fileSizeKB, audioResult.estimatedDuration));
-
       console.log(`🔊 Audio generado exitosamente: ${sessionId}`);
-      return audioResult;
 
-    } catch (error) {
-      console.error(`❌ Error generando audio [${sessionId}]:`, error);
-      throw error;
-    }
-  }
-
-  // ===============================
-  // GENERAR VIDEO COMPLETO
-  // ===============================
-  async generateVideo(chatId, scriptResult, imageNumber, keyword, sessionId) {
-    try {
-      const messages = BotMessages.getVideoProcessMessages();
-      await this.bot.sendMessage(chatId, messages.generatingVideo);
-
-      // Preparar audio para video
-      const audioFileName = `tigrizio_${imageNumber}_${keyword.replace(/\s+/g, "_")}_${Date.now()}`;
-      const audioResult = await this.bot.voiceGen.generateAudio(scriptResult.script, audioFileName);
-
-      if (!audioResult.success) {
-        throw new Error(`Error generando audio para video: ${audioResult.error}`);
+      // PASO 2: CARGAR AUDIO BUFFER (USAR EL AUDIO YA GENERADO)
+      const audioPath = path.join(__dirname, "../../assets/audio", audioResult.fileName)
+      
+      // VERIFICAR QUE EL ARCHIVO EXISTE ANTES DE LEERLO
+      try {
+        await fs.access(audioPath);
+        console.log(`✅ Archivo de audio confirmado: ${audioPath}`);
+      } catch (error) {
+        console.error(`❌ Archivo de audio NO encontrado: ${audioPath}`);
+        throw new Error(`Archivo de audio no encontrado: ${audioResult.fileName}`);
       }
-
-      // Cargar audio buffer
-      const audioPath = path.join(__dirname, "../assets/audio", audioResult.fileName);
+      
       const audioBuffer = await fs.readFile(audioPath);
+      console.log(`📊 Audio buffer cargado: ${audioBuffer.length} bytes`);
 
-      // Generar video con Hedra
+      // PASO 3: GENERAR VIDEO CON HEDRA
       const imageName = `tigrizio${imageNumber}`;
       const videoResult = await this.bot.videoGen.generarVideoCompleto(
         audioBuffer,
@@ -138,7 +125,7 @@ class VideoPipeline {
         throw new Error(`Error generando video: ${videoResult.error}`);
       }
 
-      // Enviar resultados finales
+      // PASO 4: ENVIAR RESULTADOS FINALES
       await this.sendFinalResults(chatId, videoResult, scriptResult, imageNumber, sessionId);
 
       console.log(`🎉 Video completado exitosamente: ${sessionId}`);
@@ -178,7 +165,7 @@ class VideoPipeline {
           `📝 **Caption viral generado:**\n` +
           `📄 Archivo: ${videoResult.caption.nombreArchivo}\n` +
           `📊 Caracteres: ${videoResult.caption.caracteres}\n\n` +
-          `🔥 *¡Listo para copiar y pegar en redes sociales!*`
+          `🔥 ¡Listo para copiar y pegar en redes sociales`
         );
       }
 
@@ -195,12 +182,11 @@ class VideoPipeline {
   // CALCULAR TIEMPO TOTAL
   // ===============================
   calculateTotalTime() {
-    // Tiempo estimado basado en experiencia
     return Math.round(Math.random() * 3 + 8); // 8-11 minutos
   }
 
   // ===============================
-  // VALIDAR RECURSOS ANTES DE INICIAR
+  // OTROS MÉTODOS (SIN CAMBIOS)
   // ===============================
   async validateResources(imageNumber, keyword) {
     const validation = {
@@ -228,7 +214,7 @@ class VideoPipeline {
 
       // Verificar límites de sesiones
       const sessionStats = this.bot.sessionManager.getStats();
-      if (sessionStats.active >= 5) { // Máximo 5 sesiones concurrentes
+      if (sessionStats.active >= 5) {
         validation.valid = false;
         validation.errors.push('Límite de sesiones concurrentes alcanzado');
       }
@@ -241,9 +227,6 @@ class VideoPipeline {
     return validation;
   }
 
-  // ===============================
-  // VERIFICAR CONEXIONES DE APIs
-  // ===============================
   async checkAPIConnections() {
     const results = {
       openai: false,
@@ -254,23 +237,18 @@ class VideoPipeline {
     };
 
     try {
-      // Test OpenAI
       const openaiTest = await this.bot.scriptGen.testConnection();
       results.openai = openaiTest.success;
 
-      // Test ElevenLabs
       const elevenlabsTest = await this.bot.voiceGen.testConnection();
       results.elevenlabs = elevenlabsTest.success;
 
-      // Test Hedra
       const hedraTest = await this.bot.videoGen.testConnection();
       results.hedra = hedraTest.success;
 
-      // Test Supabase
       const supabaseTest = await this.bot.db.testConnection();
       results.supabase = supabaseTest.success;
 
-      // Verificar que todas estén conectadas
       results.allConnected = results.openai && results.elevenlabs && results.hedra && results.supabase;
 
     } catch (error) {
@@ -280,33 +258,22 @@ class VideoPipeline {
     return results;
   }
 
-  // ===============================
-  // LIMPIAR ARCHIVOS TEMPORALES
-  // ===============================
   async cleanupTempFiles(sessionId) {
     try {
-      // Esta función podría limpiar archivos temporales específicos de la sesión
-      // Por ahora, solo registramos que se intentó limpiar
       console.log(`🧹 Limpieza temporal para sesión: ${sessionId}`);
-      
-      // En el futuro podrías implementar limpieza real si acumulas muchos archivos
-      
     } catch (error) {
       console.error('❌ Error en limpieza temporal:', error);
     }
   }
 
-  // ===============================
-  // OBTENER ESTADÍSTICAS DEL PIPELINE
-  // ===============================
   getStats() {
     const sessionStats = this.bot.sessionManager.getStats();
     
     return {
       activePipelines: sessionStats.active,
-      completedToday: 0, // Implementar counter si necesitas
+      completedToday: 0,
       averageTime: '10 minutos',
-      successRate: '95%', // Implementar tracking si necesitas
+      successRate: '95%',
       lastGeneration: new Date().toISOString()
     };
   }

@@ -2,12 +2,16 @@
   "name": "tigrizio-video-generator",
   "version": "1.0.0",
   "description": "Sistema automático de generación de videos de fútbol con tweets de Fabrizio Romano",
-  "main": "backend/server.js",
+  "main": "backend/combined-server.js",
   "scripts": {
-    "start": "node backend/web-server.js",
+    "start": "node backend/combined-server.js",
     "dev": "node backend/server.js",
     "web": "node backend/web-server.js",
-    "bot": "node backend/telegram-bot.js"
+    "bot": "node backend/start-bot.js",
+    "both": "concurrently \"npm run web\" \"npm run bot\"",
+    "railway-start": "node backend/combined-server.js",
+    "build": "echo 'No build step required'",
+    "postinstall": "echo 'Installation complete'"
   },
   "keywords": [
     "football",
@@ -26,6 +30,7 @@
     "@supabase/supabase-js": "^2.52.0",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
+    "concurrently": "^8.2.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
@@ -40,10 +45,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tu-usuario/tigrizio-video-generator.git"
+    "url": "git+https://github.com/JorgeGdev/tgrizionews.git"
   },
   "bugs": {
-    "url": "https://github.com/tu-usuario/tigrizio-video-generator/issues"
+    "url": "https://github.com/JorgeGdev/tgrizionews/issues"
   },
-  "homepage": "https://github.com/tu-usuario/tigrizio-video-generator#readme"
+  "homepage": "https://github.com/JorgeGdev/tgrizionews#readme"
 }

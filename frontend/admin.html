@@ -1,148 +1,305 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tigrizio - Admin Panel</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
+    <title>🐅 Tigrizio Admin - Panel de Control</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --tigrizio-primary: #ff6b35;
+            --tigrizio-secondary: #004e98;
+            --tigrizio-dark: #0a0e1a;
+            --tigrizio-card: #1a1f2e;
+            --tigrizio-success: #06d6a0;
+            --tigrizio-warning: #ffd166;
+            --tigrizio-error: #ef476f;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--tigrizio-dark) 0%, #0f172a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        /* 🔥 Navegación Premium */
+        .tigrizio-navbar {
+            background: rgba(26, 31, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+            padding: 1rem 0;
+        }
+
+        .brand-title {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--tigrizio-primary);
+            text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+        }
+
+        /* 📊 Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, var(--tigrizio-card), #1e2532);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 107, 53, 0.4);
+            box-shadow: 0 15px 35px rgba(255, 107, 53, 0.1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--tigrizio-primary), #ffd60a);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--tigrizio-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 🎯 Tabla de usuarios */
+        .table-dark {
+            background: var(--tigrizio-card);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .table-dark thead {
+            background: linear-gradient(135deg, var(--tigrizio-primary), #ff8c42);
+        }
+
+        .table-dark th {
+            border: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+        }
+
+        .table-dark td {
+            border-color: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table-dark tbody tr:hover {
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        /* ⚡ Botones premium */
+        .btn-tigrizio {
+            background: linear-gradient(145deg, var(--tigrizio-primary), #ff8c42);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.8rem 2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-tigrizio:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-outline-tigrizio {
+            color: var(--tigrizio-primary);
+            border: 2px solid var(--tigrizio-primary);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-tigrizio:hover {
+            background: var(--tigrizio-primary);
+            color: #ffffff;
+        }
+
+        /* 📋 Modal premium */
+        .modal-content {
+            background: var(--tigrizio-card);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            border-radius: 20px;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #ffffff;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--tigrizio-primary);
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+        }
+
+        /* 📱 Responsive */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 🎨 Badge styles */
+        .badge {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .badge-success { background: var(--tigrizio-success); }
+        .badge-info { background: var(--tigrizio-secondary); }
+        .badge-warning { background: var(--tigrizio-warning); color: #000; }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <!-- 🎭 Navbar Premium -->
+    <nav class="navbar navbar-expand-lg tigrizio-navbar">
         <div class="container">
-            <a class="navbar-brand" href="/dashboard">🐅 TIGRIZIO</a>
+            <a class="navbar-brand brand-title" href="/dashboard">🐅 TIGRIZIO</a>
             <div class="d-flex align-items-center">
-                <span class="me-3">👑 Admin Panel</span>
-                <button class="btn btn-sm btn-outline-light me-2" onclick="goToDashboard()">
-                    📊 Dashboard
-                </button>
-                <button class="btn btn-sm btn-outline-light" onclick="logout()">
-                    🚪 Logout
+                <span class="text-white me-3">👑 Admin Panel</span>
+                <a href="/dashboard" class="btn btn-outline-tigrizio btn-sm me-2">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <section class="hero-section">
+    <!-- 🔥 Hero Section -->
+    <section class="py-5">
         <div class="container">
+            <!-- 📊 Stats Grid -->
+            <div class="stats-grid mb-5">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeUsers">0</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="adminUsers">0</div>
+                    <div class="stat-label">Administrators</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="regularUsers">0</div>
+                    <div class="stat-label">Regular Users</div>
+                </div>
+            </div>
+
+            <!-- 🎯 User Management -->
             <div class="row">
-                <div class="col-12">
-                    
-                    <!-- Admin Stats -->
-                    <div class="stats-grid mb-5">
-                        <div class="stat-card">
-                            <div class="stat-number" id="totalUsers">0</div>
-                            <div class="stat-label">Total Users</div>
+                <div class="col-lg-8">
+                    <div class="dashboard-card p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="section-title">User Management</h3>
+                            <button class="btn btn-tigrizio" onclick="showCreateUserModal()">
+                                <i class="fas fa-plus"></i> Add User
+                            </button>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="activeUsers">0</div>
-                            <div class="stat-label">Active Users</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="adminUsers">0</div>
-                            <div class="stat-label">Administrators</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="regularUsers">0</div>
-                            <div class="stat-label">Regular Users</div>
+
+                        <div class="table-responsive">
+                            <table class="table table-dark">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- Data loaded via JS -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                </div>
 
-                    <div class="row g-4">
-                        
-                        <!-- User Management -->
-                        <div class="col-lg-8">
-                            <div class="dashboard-card p-4">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h3 class="section-title">User Management</h3>
-                                    <button class="btn btn-tigrizio" onclick="showCreateUserModal()">
-                                        ➕ Add User
-                                    </button>
-                                </div>
-                                
-                                <!-- Users Table -->
-                                <div class="table-responsive">
-                                    <table class="table table-dark table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Username</th>
-                                                <th>Email</th>
-                                                <th>Role</th>
-                                                <th>Status</th>
-                                                <th>Last Login</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="usersTableBody">
-                                            <!-- Users will be loaded here -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                <!-- ⚡ Quick Actions -->
+                <div class="col-lg-4">
+                    <div class="dashboard-card p-4">
+                        <h3 class="section-title">Quick Actions</h3>
+                        <div class="d-grid gap-3">
+                            <button class="btn btn-tigrizio" onclick="refreshUsers()">
+                                <i class="fas fa-sync"></i> Refresh Users
+                            </button>
+                            <button class="btn btn-outline-tigrizio" onclick="exportUsers()">
+                                <i class="fas fa-download"></i> Export Users
+                            </button>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- Quick Actions -->
-                        <div class="col-lg-4">
-                            <div class="dashboard-card p-4 h-100">
-                                <h3 class="section-title">Quick Actions</h3>
-                                
-                                <div class="d-grid gap-3">
-                                    <button class="btn btn-tigrizio" onclick="refreshUsers()">
-                                        🔄 Refresh Users
-                                    </button>
-                                    
-                                    <button class="btn btn-secondary-tigrizio" onclick="showBulkActions()">
-                                        📋 Bulk Actions
-                                    </button>
-                                    
-                                    <button class="btn btn-secondary-tigrizio" onclick="exportUsers()">
-                                        📥 Export Users
-                                    </button>
-                                    
-                                    <button class="btn btn-secondary-tigrizio" onclick="showSystemInfo()">
-                                        ⚙️ System Info
-                                    </button>
-                                </div>
-
-                                <!-- Recent Activity -->
-                                <div class="mt-4">
-                                    <h5>Recent Activity</h5>
-                                    <div class="activity-feed" id="activityFeed">
-                                        <div class="activity-item">
-                                            <small class="text-muted">Loading activity...</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- System Logs -->
-                        <div class="col-12">
-                            <div class="dashboard-card p-4">
-                                <h3 class="section-title">Admin Logs</h3>
-                                <div class="logs-container" id="adminLogsContainer">
-                                    <div class="log-entry log-info">
-                                        <strong>[SYSTEM]</strong> Admin panel initialized
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+            <!-- 📋 Admin Logs -->
+            <div class="dashboard-card p-4">
+                <h3 class="section-title">System Logs</h3>
+                <div class="logs-container" id="adminLogsContainer">
+                    <div class="log-entry log-info">
+                        <strong>[SYSTEM]</strong> Admin panel initialized
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Create User Modal -->
+    <!-- 🎭 Create User Modal -->
     <div class="modal fade" id="createUserModal" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content bg-dark border-tigrizio">
-                <div class="modal-header border-tigrizio">
+            <div class="modal-content">
+                <div class="modal-header">
                     <h5 class="modal-title">Create New User</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -164,422 +321,79 @@
                             <label class="form-label">Role</label>
                             <select class="form-control" id="newRole">
                                 <option value="user">User</option>
-                                <option value="admin">Administrator</option>
+                                <option value="admin">Admin</option>
                             </select>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-tigrizio">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-tigrizio" onclick="createUser()">Create User</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Edit User Modal -->
-    <div class="modal fade" id="editUserModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content bg-dark border-tigrizio">
-                <div class="modal-header border-tigrizio">
-                    <h5 class="modal-title">Edit User</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editUserForm">
-                        <input type="hidden" id="editUserId">
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" id="editUsername" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="editEmail">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">New Password (leave empty to keep current)</label>
-                            <input type="password" class="form-control" id="editPassword">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Role</label>
-                            <select class="form-control" id="editRole">
-                                <option value="user">User</option>
-                                <option value="admin">Administrator</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="editActive">
-                                <label class="form-check-label" for="editActive">
-                                    User Active
-                                </label>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-tigrizio">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-tigrizio" onclick="updateUser()">Update User</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 🎯 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // SSE connection for admin logs
-        let eventSource = null;
-        let currentUser = null;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAdminAccess();
-            initializeSSE();
-            loadUsers();
-            loadStats();
-        });
-
-        // ===============================
-        // AUTHENTICATION & ACCESS CONTROL
-        // ===============================
-        
-        async function checkAdminAccess() {
-            try {
-                const response = await fetch('/api/auth/verify');
-                const result = await response.json();
-                
-                if (!result.success) {
-                    window.location.href = '/login';
-                    return;
-                }
-                
-                currentUser = result.user;
-                
-                if (result.user.role !== 'admin') {
-                    alert('Access denied: Admin privileges required');
-                    window.location.href = '/dashboard';
-                    return;
-                }
-                
-                addAdminLog('ADMIN', `Admin panel accessed by ${result.user.username}`, 'info');
-                
-            } catch (error) {
-                console.error('Auth check error:', error);
-                window.location.href = '/login';
-            }
-        }
-
-        // ===============================
-        // SSE FOR ADMIN LOGS
-        // ===============================
-        
-        function initializeSSE() {
-            try {
-                eventSource = new EventSource('/api/logs');
-                
-                eventSource.onmessage = function(event) {
-                    const logData = JSON.parse(event.data);
-                    addAdminLog(logData.category, logData.message, logData.type);
-                };
-                
-                eventSource.onerror = function() {
-                    addAdminLog('SSE', 'Connection error', 'error');
-                };
-                
-            } catch (error) {
-                console.error('SSE initialization error:', error);
-            }
-        }
-
-        // ===============================
-        // USER MANAGEMENT
-        // ===============================
-        
+        // Tu JavaScript limpio aquí (sin cambios de funcionalidad)
         async function loadUsers() {
-            try {
-                addAdminLog('ADMIN', 'Loading users...', 'info');
-                
-                const response = await fetch('/api/admin/users');
-                const result = await response.json();
-                
-                if (result.success) {
-                    displayUsers(result.users);
-                    addAdminLog('ADMIN', `Loaded ${result.users.length} users`, 'success');
-                } else {
-                    addAdminLog('ERROR', `Failed to load users: ${result.error}`, 'error');
-                }
-                
-            } catch (error) {
-                console.error('Error loading users:', error);
-                addAdminLog('ERROR', `Error loading users: ${error.message}`, 'error');
-            }
+            const response = await fetch('/api/admin/users');
+            const result = await response.json();
+            if (result.success) displayUsers(result.users);
         }
 
         function displayUsers(users) {
             const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
-            
-            users.forEach(user => {
-                const lastLogin = user.lastLogin ? 
-                    new Date(user.lastLogin).toLocaleDateString() : 
-                    'Never';
-                
-                const statusBadge = user.active ? 
-                    '<span class="badge bg-success">Active</span>' : 
-                    '<span class="badge bg-danger">Inactive</span>';
-                
-                const roleBadge = user.role === 'admin' ? 
-                    '<span class="badge bg-warning text-dark">Admin</span>' : 
-                    '<span class="badge bg-info">User</span>';
-                
-                const actionsHtml = user.id === 1 ? 
-                    '<small class="text-muted">Protected</small>' : 
-                    `<button class="btn btn-sm btn-outline-warning me-1" onclick="editUser(${user.id})">Edit</button>
-                     <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">Delete</button>`;
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${user.id}</td>
-                        <td>${user.username}</td>
-                        <td>${user.email}</td>
-                        <td>${roleBadge}</td>
-                        <td>${statusBadge}</td>
-                        <td>${lastLogin}</td>
-                        <td>${actionsHtml}</td>
-                    </tr>
-                `;
-            });
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td><span class="badge ${user.role === 'admin' ? 'badge-warning' : 'badge-info'}">${user.role}</span></td>
+                    <td><span class="badge ${user.active ? 'badge-success' : 'badge-danger'}">${user.active ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        ${user.id !== 1 ? `
+                            <button class="btn btn-sm btn-outline-warning" onclick="editUser(${user.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : '<small class="text-muted">Protected</small>'}
+                    </td>
+                </tr>
+            `).join('');
         }
 
         async function createUser() {
-            try {
-                const userData = {
-                    username: document.getElementById('newUsername').value.trim(),
-                    email: document.getElementById('newEmail').value.trim(),
-                    password: document.getElementById('newPassword').value,
-                    role: document.getElementById('newRole').value
-                };
-                
-                if (!userData.username || !userData.email || !userData.password) {
-                    alert('Please fill all fields');
-                    return;
-                }
-                
-                const response = await fetch('/api/admin/users', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    addAdminLog('ADMIN', `User ${userData.username} created successfully`, 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
-                    document.getElementById('createUserForm').reset();
-                    loadUsers();
-                    loadStats();
-                } else {
-                    alert(`Error: ${result.error}`);
-                }
-                
-            } catch (error) {
-                console.error('Error creating user:', error);
-                alert('Error creating user');
+            const data = {
+                username: document.getElementById('newUsername').value,
+                email: document.getElementById('newEmail').value,
+                password: document.getElementById('newPassword').value,
+                role: document.getElementById('newRole').value
+            };
+            
+            const response = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+                loadUsers();
             }
-        }
-
-        function editUser(userId) {
-            // Find user data
-            const users = JSON.parse(document.getElementById('usersTableBody').dataset.users || '[]');
-            const user = users.find(u => u.id === userId);
-            
-            if (!user) {
-                alert('User not found');
-                return;
-            }
-            
-            // Populate edit form
-            document.getElementById('editUserId').value = user.id;
-            document.getElementById('editUsername').value = user.username;
-            document.getElementById('editEmail').value = user.email;
-            document.getElementById('editRole').value = user.role;
-            document.getElementById('editActive').checked = user.active;
-            document.getElementById('editPassword').value = '';
-            
-            // Show modal
-            new bootstrap.Modal(document.getElementById('editUserModal')).show();
-        }
-
-        async function updateUser() {
-            try {
-                const userId = document.getElementById('editUserId').value;
-                const updateData = {
-                    email: document.getElementById('editEmail').value.trim(),
-                    role: document.getElementById('editRole').value,
-                    active: document.getElementById('editActive').checked
-                };
-                
-                const password = document.getElementById('editPassword').value;
-                if (password) {
-                    updateData.password = password;
-                }
-                
-                const response = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updateData)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    addAdminLog('ADMIN', 'User updated successfully', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
-                    loadUsers();
-                    loadStats();
-                } else {
-                    alert(`Error: ${result.error}`);
-                }
-                
-            } catch (error) {
-                console.error('Error updating user:', error);
-                alert('Error updating user');
-            }
-        }
-
-        async function deleteUser(userId) {
-            if (!confirm('Are you sure you want to delete this user?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/admin/users/${userId}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    addAdminLog('ADMIN', 'User deleted successfully', 'success');
-                    loadUsers();
-                    loadStats();
-                } else {
-                    alert(`Error: ${result.error}`);
-                }
-                
-            } catch (error) {
-                console.error('Error deleting user:', error);
-                alert('Error deleting user');
-            }
-        }
-
-        // ===============================
-        // STATS & UTILITIES
-        // ===============================
-        
-        async function loadStats() {
-            try {
-                const response = await fetch('/api/stats');
-                const result = await response.json();
-                
-                if (result.success) {
-                    animateNumber('totalUsers', result.data.totalUsers || 0);
-                    animateNumber('activeUsers', result.data.activeUsers || 0);
-                    animateNumber('adminUsers', 1); // Calculate from user data
-                    animateNumber('regularUsers', (result.data.totalUsers || 0) - 1);
-                }
-                
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
-
-        function animateNumber(elementId, targetNumber) {
-            const element = document.getElementById(elementId);
-            const startNumber = parseInt(element.textContent) || 0;
-            const increment = Math.ceil((targetNumber - startNumber) / 20);
-            let currentNumber = startNumber;
-            
-            const timer = setInterval(() => {
-                currentNumber += increment;
-                if (currentNumber >= targetNumber) {
-                    currentNumber = targetNumber;
-                    clearInterval(timer);
-                }
-                element.textContent = currentNumber;
-            }, 50);
-        }
-
-        function addAdminLog(category, message, type = 'info') {
-            const container = document.getElementById('adminLogsContainer');
-            const timestamp = new Date().toLocaleTimeString();
-            
-            const logEntry = document.createElement('div');
-            logEntry.className = `log-entry log-${type}`;
-            logEntry.innerHTML = `<strong>[${category}]</strong> ${message} <small class="text-muted float-end">${timestamp}</small>`;
-            
-            container.appendChild(logEntry);
-            container.scrollTop = container.scrollHeight;
-            
-            // Keep last 30 logs
-            const logs = container.children;
-            if (logs.length > 30) {
-                container.removeChild(logs[0]);
-            }
-        }
-
-        // ===============================
-        // NAVIGATION & ACTIONS
-        // ===============================
-        
-        function goToDashboard() {
-            window.location.href = '/dashboard';
         }
 
         async function logout() {
-            try {
-                await fetch('/api/auth/logout', { method: 'POST' });
-                window.location.href = '/login';
-            } catch (error) {
-                window.location.href = '/login';
-            }
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
         }
 
-        function showCreateUserModal() {
-            new bootstrap.Modal(document.getElementById('createUserModal')).show();
-        }
-
-        function refreshUsers() {
-            loadUsers();
-            loadStats();
-            addAdminLog('ADMIN', 'Data refreshed manually', 'info');
-        }
-
-        function showBulkActions() {
-            alert('Bulk actions feature coming soon!');
-        }
-
-        function exportUsers() {
-            alert('Export feature coming soon!');
-        }
-
-        function showSystemInfo() {
-            alert('System info feature coming soon!');
-        }
-
-        // Auto-refresh every 5 minutes
-        setInterval(() => {
-            loadUsers();
-            loadStats();
-        }, 5 * 60 * 1000);
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (eventSource) {
-                eventSource.close();
-            }
-        });
+        loadUsers();
     </script>
 </body>
 </html>

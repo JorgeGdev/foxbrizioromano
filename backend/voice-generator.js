@@ -1,5 +1,5 @@
 // ===============================
-// TIGRIZIO - GENERADOR DE VOZ ÉPICA
+// TIGRIZIO - GENERADOR DE VOZ ÉPICA (CORREGIDO)
 // Síntesis de voz con ElevenLabs
 // ===============================
 
@@ -28,7 +28,7 @@ class TigrizioVoiceGenerator {
     }
 
     // ===============================
-    // GENERAR AUDIO DESDE SCRIPT
+    // GENERAR AUDIO DESDE SCRIPT (RUTA CORREGIDA!)
     // ===============================
     async generateAudio(script, outputFileName = null) {
         try {
@@ -46,9 +46,23 @@ class TigrizioVoiceGenerator {
                 outputFileName += '.mp3';
             }
             
-            const outputPath = path.join(__dirname, '../assets/audio', outputFileName);
+            // ✅ RUTA CORREGIDA - Crear carpeta assets/audio en la raíz del proyecto
+            const audioDir = path.join(__dirname, '../assets/audio');
+            const outputPath = path.join(audioDir, outputFileName);
+            
+            console.log(`📁 Directorio de audio: ${audioDir}`);
+            console.log(`📄 Ruta completa: ${outputPath}`);
+            
+            // ✅ CREAR DIRECTORIO SI NO EXISTE
+            try {
+                await fs.mkdir(audioDir, { recursive: true });
+                console.log(`✅ Directorio de audio verificado: ${audioDir}`);
+            } catch (mkdirError) {
+                console.log(`⚠️ Directorio ya existe: ${audioDir}`);
+            }
             
             // Llamar a ElevenLabs API
+            console.log('🔗 Llamando a ElevenLabs API...');
             const response = await axios.post(
                 `${this.baseUrl}/text-to-speech/${this.voiceId}`,
                 {
@@ -62,31 +76,39 @@ class TigrizioVoiceGenerator {
                         'Content-Type': 'application/json',
                         'xi-api-key': this.apiKey
                     },
-                    responseType: 'arraybuffer'
+                    responseType: 'arraybuffer',
+                    timeout: 30000 // 30 segundos timeout
                 }
             );
             
-            // Guardar archivo de audio
+            // ✅ GUARDAR ARCHIVO CON VERIFICACIÓN
             await fs.writeFile(outputPath, response.data);
+            console.log(`💾 Archivo guardado en: ${outputPath}`);
             
-            // Obtener información del archivo
-            const stats = await fs.stat(outputPath);
-            const fileSizeKB = Math.round(stats.size / 1024);
-            
-            console.log('✅ Audio generado exitosamente');
-            console.log(`📁 Archivo: ${outputFileName}`);
-            console.log(`📊 Tamaño: ${fileSizeKB} KB`);
-            console.log(`🎵 Duración estimada: ~${Math.round(script.split(' ').length / 2.5)}s`);
-            
-            return {
-                success: true,
-                audioPath: outputPath,
-                fileName: outputFileName,
-                fileSizeKB: fileSizeKB,
-                estimatedDuration: Math.round(script.split(' ').length / 2.5),
-                script: script,
-                voiceUsed: this.voiceName
-            };
+            // ✅ VERIFICAR QUE EL ARCHIVO EXISTE
+            try {
+                const stats = await fs.stat(outputPath);
+                const fileSizeKB = Math.round(stats.size / 1024);
+                
+                console.log('✅ Audio generado exitosamente');
+                console.log(`📁 Archivo: ${outputFileName}`);
+                console.log(`📊 Tamaño: ${fileSizeKB} KB`);
+                console.log(`🎵 Duración estimada: ~${Math.round(script.split(' ').length / 2.5)}s`);
+                console.log(`📍 Ubicación: ${outputPath}`);
+                
+                return {
+                    success: true,
+                    audioPath: outputPath,
+                    fileName: outputFileName,
+                    fileSizeKB: fileSizeKB,
+                    estimatedDuration: Math.round(script.split(' ').length / 2.5),
+                    script: script,
+                    voiceUsed: this.voiceName
+                };
+                
+            } catch (statError) {
+                throw new Error(`Archivo guardado pero no se puede verificar: ${statError.message}`);
+            }
             
         } catch (error) {
             console.error('❌ Error generando audio:', error.message);

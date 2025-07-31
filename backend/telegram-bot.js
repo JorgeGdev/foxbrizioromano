@@ -71,11 +71,23 @@ class TigrizioBot {
   
   // Enviar mensaje con formato
   async sendMessage(chatId, text, options = {}) {
+  try {
     return await this.bot.sendMessage(chatId, text, {
       parse_mode: 'Markdown',
       ...options
     });
+  } catch (error) {
+    // Si falla Markdown, intentar sin formato
+    if (error.message.includes("can't parse entities")) {
+      console.log('⚠️ Error de Markdown, enviando sin formato:', error.message);
+      return await this.bot.sendMessage(chatId, text, {
+        ...options,
+        parse_mode: undefined
+      });
+    }
+    throw error;
   }
+}
 
   // Enviar mensaje al chat principal
   async sendToMainChat(text, options = {}) {
