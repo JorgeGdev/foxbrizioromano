@@ -20,23 +20,37 @@ class SupabaseManager {
     // VERIFICAR SI TWEET YA EXISTE (evitar duplicados)
     // ===============================
     async tweetExists(tweetId) {
-        try {
-            const { data, error } = await this.supabase
-                .from('fabrizio_tweets')
-                .select('id')
-                .eq('tweet_id', tweetId)
-                .single();
-
-            if (error && error.code !== 'PGRST116') { // PGRST116 = no encontrado
-                throw error;
-            }
-
-            return data !== null;
-        } catch (error) {
-            console.error('❌ Error verificando duplicado:', error.message);
-            return false; // En caso de error, asumir que no existe
+    try {
+        // ✅ DEBUG: Log para ver qué ID se está buscando
+        console.log(`🔍 Verificando duplicado: ${tweetId} (${typeof tweetId})`);
+        
+        if (!tweetId || tweetId === '') {
+            console.log('⚠️ ID vacío o nulo, considerando como no existente');
+            return false;
         }
+        
+        const { data, error } = await this.supabase
+            .from('fabrizio_tweets')
+            .select('id, tweet_id')
+            .eq('tweet_id', tweetId.toString()) // Asegurar string
+            .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no encontrado
+            console.error('❌ Error en tweetExists:', error.message);
+            throw error;
+        }
+
+        const exists = data !== null;
+        console.log(`📊 Tweet ${tweetId} existe: ${exists ? 'SÍ' : 'NO'}`);
+        
+        return exists;
+        
+    } catch (error) {
+        console.error('❌ Error verificando duplicado:', error.message);
+        // En caso de error, asumir que NO existe para evitar perder tweets
+        return false;
     }
+}
 
     // ===============================
     // GUARDAR TWEET CON METADATOS VIP

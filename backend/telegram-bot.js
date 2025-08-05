@@ -62,7 +62,10 @@ class TigrizioBot {
     // Configurar botones de aprobación
     this.approvalHandler.setupApprovalHandler();
 
+
     console.log("✅ Manejadores configurados");
+
+    this.setupDebugCommands();
   }
 
   // ===============================
@@ -202,6 +205,128 @@ class TigrizioBot {
     this.bot.stopPolling();
     console.log("🛑 Tigrizio Bot detenido");
   }
+
+  setupDebugCommands() {
+        // Comando /debug - Análisis completo
+        this.bot.onText(/\/debug/, async (msg) => {
+            try {
+                await this.sendMessage(msg.chat.id, '🔬 DEBUG DETALLADO INICIADO...');
+                
+                // PASO 1: Test TwitterAPI
+                await this.sendMessage(msg.chat.id, '📡 PASO 1: Consultando TwitterAPI...');
+                const tweets = await this.scraper.getRecentTweets(5);
+                
+                await this.sendMessage(msg.chat.id, 
+                    `📊 PASO 1 RESULTADO:\n` +
+                    `• Tweets obtenidos: ${tweets.length}\n` +
+                    `• API Status: ${tweets.length > 0 ? '✅ OK' : '❌ Sin tweets'}`
+                );
+                
+                if (tweets.length > 0) {
+                    // PASO 2: Primer tweet
+                    const firstTweet = tweets[0];
+                    await this.sendMessage(msg.chat.id, 
+                        `🔍 PASO 2 - PRIMER TWEET:\n` +
+                        `• ID: ${firstTweet.id}\n` +
+                        `• Tipo: ${typeof firstTweet.id}\n` +
+                        `• Fecha: ${firstTweet.createdAt}\n` +
+                        `• Texto: ${firstTweet.text.substring(0, 60)}...`
+                    );
+                    
+                    // PASO 3: Verificar duplicados
+                    await this.sendMessage(msg.chat.id, '🔄 PASO 3: Verificando duplicados...');
+                    
+                    let duplicateCount = 0;
+                    let newCount = 0;
+                    const results = [];
+                    
+                    for (let i = 0; i < Math.min(3, tweets.length); i++) {
+                        const tweet = tweets[i];
+                        const exists = await this.db.tweetExists(tweet.id);
+                        
+                        results.push(`${i + 1}. ${tweet.id} → ${exists ? '❌ DUPLICADO' : '✅ NUEVO'}`);
+                        
+                        if (exists) duplicateCount++;
+                        else newCount++;
+                    }
+                    
+                    await this.sendMessage(msg.chat.id, 
+                        `📊 PASO 3 RESULTADO:\n` +
+                        results.join('\n') + '\n\n' +
+                        `📈 RESUMEN:\n` +
+                        `• Duplicados: ${duplicateCount}\n` +
+                        `• Nuevos: ${newCount}`
+                    );
+                }
+                
+                await this.sendMessage(msg.chat.id, '🎯 DEBUG COMPLETADO');
+                
+            } catch (error) {
+                await this.sendMessage(msg.chat.id, `💥 Error debug: ${error.message}`);
+                console.error('Debug error:', error);
+            }
+        });
+
+        // Comando /checkids - IDs específicos
+        this.bot.onText(/\/checkids/, async (msg) => {
+            try {
+                await this.sendMessage(msg.chat.id, '🔍 VERIFICANDO IDs...');
+                
+                const apiTweets = await this.scraper.getRecentTweets(6);
+                
+                if (apiTweets.length > 0) {
+                    await this.sendMessage(msg.chat.id, `📡 API devolvió ${apiTweets.length} tweets`);
+                    
+                    for (let i = 0; i < Math.min(3, apiTweets.length); i++) {
+                        const tweet = apiTweets[i];
+                        const existsInDB = await this.db.tweetExists(tweet.id);
+                        
+                        await this.sendMessage(msg.chat.id, 
+                            `🔍 TWEET ${i + 1}:\n` +
+                            `• ID: ${tweet.id}\n` +
+                            `• Tipo: ${typeof tweet.id}\n` +
+                            `• En DB: ${existsInDB ? '✅ EXISTE' : '❌ NUEVO'}\n` +
+                            `• Texto: ${tweet.text.substring(0, 50)}...\n` +
+                            `────────────`
+                        );
+                    }
+                } else {
+                    await this.sendMessage(msg.chat.id, '❌ API no devolvió tweets');
+                }
+                
+            } catch (error) {
+                await this.sendMessage(msg.chat.id, `💥 Error IDs: ${error.message}`);
+            }
+        });
+
+        // Comando /status - Estado general
+        this.bot.onText(/\/status/, async (msg) => {
+            try {
+                const dbStats = await this.db.getStats();
+                
+                await this.sendMessage(msg.chat.id, 
+                    `📊 ESTADO TIGRIZIO:\n\n` +
+                    `🗄️ BASE DE DATOS:\n` +
+                    `• Total tweets: ${dbStats.success ? dbStats.stats.total : 'Error'}\n` +
+                    `• VIP tweets: ${dbStats.success ? dbStats.stats.vipCount : 'Error'}\n\n` +
+                    `📡 TWITTER API:\n` +
+                    `• Créditos: 92,185+ disponibles\n\n` +
+                    `🤖 BOT:\n` +
+                    `• Estado: ✅ Operativo\n` +
+                    `• Debug mode: ✅ Activo`
+                );
+                
+            } catch (error) {
+                await this.sendMessage(msg.chat.id, `❌ Error status: ${error.message}`);
+            }
+        });
+
+        console.log("🔬 Comandos de debug configurados");
+    }
+
+  
 }
+
+
 
 module.exports = TigrizioBot;
