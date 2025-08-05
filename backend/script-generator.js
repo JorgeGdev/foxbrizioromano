@@ -31,17 +31,17 @@ Transformar noticias reales de fútbol en **scripts hablados** de EXACTAMENTE 75
    - Menciona al protagonista del fichaje o movimiento
    - Genera expectativa: traspaso, renovación, conflicto, etc.
 
-2. **CORE (3-16 segundos / 45-55 palabras):**
+2. **CORE (3-17 segundos / 45-55 palabras):**
    - Detalles específicos, SOLO si están en base de datos:
      - Nombre de clubes, montos, fechas, tipo de contrato (préstamo, compra), duración
      - Contexto relevant (relación con otros jugadores o clubes, impacto)
    - Usa lenguaje profesional y cronológico, directo
 
-3. **CTA (16-20 segundos / 10-15 palabras):**
-   - Pregunta clara, directa, tipo Fabrizio:
-     - "¿Será clave esta temporada?"
-     - "¿Buena decisión para el jugador?"
-   - Puedes usar 1 emoji temático
+3. **CTA (18-20 segundos / 5 palabras):**
+   - cierre claro, directo, tipo Fabrizio:
+     - "Here we go"
+     - "¡Es ufficiale!"
+     - "Increible!"
 
 📛 PROHIBIDO:
 - ❌ Inventar datos, fichajes, contextos o montos que no estén explícitamente en la base

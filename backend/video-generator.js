@@ -24,7 +24,7 @@ class TigrizioVideoGenerator {
     this.audioProcessor = new TigrizioAudioProcessor();
     this.imageProcessor = new TigrizioImageProcessor();
 
-    console.log("🎬 Tigrizio Video Generator (Robusto) iniciado");
+    console.log("Tigrizio Video Generator (Robusto) iniciado");
   }
 
 
@@ -101,7 +101,7 @@ IMPORTANTE: Solo devuelve el caption final, sin explicaciones.`;
     };
 
   } catch (error) {
-    console.error(`❌ Error generando caption con OpenAI [${sessionId}]:`, error);
+    console.error(`Error generando caption con OpenAI [${sessionId}]:`, error);
     await this.logAndNotify(sessionId, `⚠️ Error en caption, usando backup...`);
 
     // Fallback caption simple si OpenAI falla
@@ -131,7 +131,7 @@ async generarCaption(script, imageName, sessionId) {
     }
 
   } catch (error) {
-    console.error('❌ Error en generación de caption:', error);
+    console.error('Error en generación de caption:', error);
     
     // Fallback caption manual como último recurso
     return `🚨 ${script.substring(0, 80)}...\n\n¿Qué piensas?\n\n#Football #TransferNews #BreakingNews\n\n¡Comenta! 👇`;
@@ -164,7 +164,7 @@ async generarCaption(script, imageName, sessionId) {
                 parse_mode: 'HTML'
             });
         } catch (error) {
-            console.log('⚠️ No se pudo enviar a Telegram:', error.message);
+            console.log('No se pudo enviar a Telegram:', error.message);
         }
     }
     */
@@ -592,7 +592,7 @@ SINCRONIZACIÓN CRÍTICA: El inicio debe ser fluido, sin cortes bruscos. La boca
   // ===============================
   async testConnection() {
     try {
-      console.log("🔬 Probando conexión con Hedra...");
+      console.log("Probando conexión con Hedra...");
 
       // Usar endpoint correcto de Hedra
       const response = await axios.get(
@@ -605,17 +605,17 @@ SINCRONIZACIÓN CRÍTICA: El inicio debe ser fluido, sin cortes bruscos. La boca
         }
       );
 
-      console.log("✅ Hedra conectado correctamente");
+      console.log("Hedra conectado correctamente");
 
       return {
         success: true,
         message: "Conectado a Hedra AI",
       };
     } catch (error) {
-      console.error("❌ Error conectando con Hedra:", error.message);
+      console.error("Error conectando con Hedra:", error.message);
       if (error.response) {
-        console.error("📊 Status:", error.response.status);
-        console.error("📝 Hedra Error:", error.response.data);
+        console.error("Status:", error.response.status);
+        console.error("Hedra Error:", error.response.data);
       }
 
       return {

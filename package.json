@@ -5,24 +5,15 @@
   "main": "backend/combined-server.js",
   "scripts": {
     "start": "node backend/combined-server.js",
-    "dev": "node backend/server.js",
-    "web": "node backend/web-server.js",
-    "bot": "node backend/start-bot.js",
-    "both": "concurrently \"npm run web\" \"npm run bot\"",
-    "railway-start": "node backend/combined-server.js",
-    "build": "echo 'No build step required'",
-    "postinstall": "echo 'Installation complete'"
+    "dev": "node backend/combined-server.js",
+    "build": "echo 'No build step required'"
   },
   "keywords": [
     "football",
-    "video",
+    "video", 
     "ai",
     "telegram",
-    "twitter",
-    "fabrizio-romano",
-    "hedra",
-    "elevenlabs",
-    "openai"
+    "twitter"
   ],
   "author": "Tu Nombre",
   "license": "MIT",
@@ -30,7 +21,6 @@
     "@supabase/supabase-js": "^2.52.0",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
-    "concurrently": "^8.2.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
@@ -42,13 +32,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/JorgeGdev/tgrizionews.git"
-  },
-  "bugs": {
-    "url": "https://github.com/JorgeGdev/tgrizionews/issues"
-  },
-  "homepage": "https://github.com/JorgeGdev/tgrizionews#readme"
+  }
 }

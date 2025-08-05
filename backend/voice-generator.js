@@ -31,102 +31,110 @@ class TigrizioVoiceGenerator {
     // GENERAR AUDIO DESDE SCRIPT (RUTA CORREGIDA!)
     // ===============================
     async generateAudio(script, outputFileName = null) {
+    try {
+        console.log('🎙️ Generando audio de Tigrizio con padding inicial...');
+        console.log(`📝 Script (${script.split(' ').length} palabras): ${script.substring(0, 100)}...`);
+        
+        // ✅ MODIFICAR EL SCRIPT PARA INCLUIR PAUSA INICIAL
+        const scriptWithPause = `... ... ${script}`;
+        console.log('🔇 Script modificado con pausa inicial');
+        
+        // Preparar nombre del archivo
+        if (!outputFileName) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            outputFileName = `tigrizio_${timestamp}.mp3`;
+        }
+        
+        if (!outputFileName.endsWith('.mp3')) {
+            outputFileName += '.mp3';
+        }
+        
+        // Crear directorio
+        const audioDir = path.join(__dirname, '../assets/audio');
+        const outputPath = path.join(audioDir, outputFileName);
+        
+        console.log(`📁 Directorio de audio: ${audioDir}`);
+        console.log(`📄 Ruta completa: ${outputPath}`);
+        
         try {
-            console.log('🎙️ Generando audio de Tigrizio...');
-            console.log(`📝 Script (${script.split(' ').length} palabras): ${script.substring(0, 100)}...`);
-            
-            // Preparar nombre del archivo
-            if (!outputFileName) {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                outputFileName = `tigrizio_${timestamp}.mp3`;
-            }
-            
-            // Asegurar que termine en .mp3
-            if (!outputFileName.endsWith('.mp3')) {
-                outputFileName += '.mp3';
-            }
-            
-            // ✅ RUTA CORREGIDA - Crear carpeta assets/audio en la raíz del proyecto
-            const audioDir = path.join(__dirname, '../assets/audio');
-            const outputPath = path.join(audioDir, outputFileName);
-            
-            console.log(`📁 Directorio de audio: ${audioDir}`);
-            console.log(`📄 Ruta completa: ${outputPath}`);
-            
-            // ✅ CREAR DIRECTORIO SI NO EXISTE
-            try {
-                await fs.mkdir(audioDir, { recursive: true });
-                console.log(`✅ Directorio de audio verificado: ${audioDir}`);
-            } catch (mkdirError) {
-                console.log(`⚠️ Directorio ya existe: ${audioDir}`);
-            }
-            
-            // Llamar a ElevenLabs API
-            console.log('🔗 Llamando a ElevenLabs API...');
-            const response = await axios.post(
-                `${this.baseUrl}/text-to-speech/${this.voiceId}`,
-                {
-                    text: script,
-                    model_id: "eleven_multilingual_v2", // Mejor para italiano/español
-                    voice_settings: this.voiceSettings
-                },
-                {
-                    headers: {
-                        'Accept': 'audio/mpeg',
-                        'Content-Type': 'application/json',
-                        'xi-api-key': this.apiKey
-                    },
-                    responseType: 'arraybuffer',
-                    timeout: 30000 // 30 segundos timeout
+            await fs.mkdir(audioDir, { recursive: true });
+            console.log(`✅ Directorio de audio verificado: ${audioDir}`);
+        } catch (mkdirError) {
+            console.log(`⚠️ Directorio ya existe: ${audioDir}`);
+        }
+        
+        // ✅ LLAMAR A ELEVENLABS CON CONFIGURACIÓN ESPECIAL
+        console.log('🔗 Llamando a ElevenLabs API con padding...');
+        const response = await axios.post(
+            `${this.baseUrl}/text-to-speech/${this.voiceId}`,
+            {
+                text: scriptWithPause,
+                model_id: "eleven_multilingual_v2",
+                voice_settings: {
+                    ...this.voiceSettings,
+                    stability: 0.50, // Ligeramente más estable para pausas
+                    style: 0.80 // Menos dramático al inicio
                 }
-            );
-            
-            // ✅ GUARDAR ARCHIVO CON VERIFICACIÓN
-            await fs.writeFile(outputPath, response.data);
-            console.log(`💾 Archivo guardado en: ${outputPath}`);
-            
-            // ✅ VERIFICAR QUE EL ARCHIVO EXISTE
-            try {
-                const stats = await fs.stat(outputPath);
-                const fileSizeKB = Math.round(stats.size / 1024);
-                
-                console.log('✅ Audio generado exitosamente');
-                console.log(`📁 Archivo: ${outputFileName}`);
-                console.log(`📊 Tamaño: ${fileSizeKB} KB`);
-                console.log(`🎵 Duración estimada: ~${Math.round(script.split(' ').length / 2.5)}s`);
-                console.log(`📍 Ubicación: ${outputPath}`);
-                
-                return {
-                    success: true,
-                    audioPath: outputPath,
-                    fileName: outputFileName,
-                    fileSizeKB: fileSizeKB,
-                    estimatedDuration: Math.round(script.split(' ').length / 2.5),
-                    script: script,
-                    voiceUsed: this.voiceName
-                };
-                
-            } catch (statError) {
-                throw new Error(`Archivo guardado pero no se puede verificar: ${statError.message}`);
+            },
+            {
+                headers: {
+                    'Accept': 'audio/mpeg',
+                    'Content-Type': 'application/json',
+                    'xi-api-key': this.apiKey
+                },
+                responseType: 'arraybuffer',
+                timeout: 30000
             }
+        );
+        
+        // Guardar archivo
+        await fs.writeFile(outputPath, response.data);
+        console.log(`💾 Archivo guardado con padding: ${outputPath}`);
+        
+        // Verificar archivo
+        try {
+            const stats = await fs.stat(outputPath);
+            const fileSizeKB = Math.round(stats.size / 1024);
             
-        } catch (error) {
-            console.error('❌ Error generando audio:', error.message);
-            
-            // Error específico de ElevenLabs
-            if (error.response) {
-                console.error('📊 Status:', error.response.status);
-                console.error('📝 ElevenLabs Error:', error.response.data);
-            }
+            console.log('✅ Audio generado exitosamente CON PADDING');
+            console.log(`📁 Archivo: ${outputFileName}`);
+            console.log(`📊 Tamaño: ${fileSizeKB} KB`);
+            console.log(`🔇 Padding inicial: ~2.5 segundos`);
+            console.log(`🎵 Duración estimada: ~${Math.round(script.split(' ').length / 2.5) + 2.5}s`);
+            console.log(`📍 Ubicación: ${outputPath}`);
             
             return {
-                success: false,
-                error: 'Error generando audio',
-                details: error.message,
-                status: error.response?.status
+                success: true,
+                audioPath: outputPath,
+                fileName: outputFileName,
+                fileSizeKB: fileSizeKB,
+                estimatedDuration: Math.round(script.split(' ').length / 2.5) + 2.5, // +2.5s padding
+                script: script,
+                voiceUsed: this.voiceName,
+                hasPadding: true,
+                paddingDuration: 2.5
             };
+            
+        } catch (statError) {
+            throw new Error(`Archivo guardado pero no se puede verificar: ${statError.message}`);
         }
+        
+    } catch (error) {
+        console.error('❌ Error generando audio con padding:', error.message);
+        
+        if (error.response) {
+            console.error('📊 Status:', error.response.status);
+            console.error('📝 ElevenLabs Error:', error.response.data);
+        }
+        
+        return {
+            success: false,
+            error: 'Error generando audio con padding',
+            details: error.message,
+            status: error.response?.status
+        };
     }
+}
 
     // ===============================
     // VERIFICAR CARACTERES DISPONIBLES
