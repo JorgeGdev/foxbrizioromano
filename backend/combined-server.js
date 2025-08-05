@@ -684,4 +684,243 @@ process.on('SIGTERM', () => {
     process.exit(0);
 });
 
+// ===============================
+// SISTEMA DE DESCARGA DE ARCHIVOS
+// Agregar ANTES de: module.exports = { sendSSELog };
+// ===============================
+
+// ===============================
+// LISTAR ARCHIVOS GENERADOS
+// ===============================
+app.get('/api/files', auth.requireAuth.bind(auth), async (req, res) => {
+    try {
+        const videosDir = path.join(__dirname, '../assets/videos');
+        const audiosDir = path.join(__dirname, '../assets/audio');
+        const captionsDir = path.join(__dirname, '../assets/captions');
+        
+        // Crear directorios si no existen
+        await fs.mkdir(videosDir, { recursive: true });
+        await fs.mkdir(audiosDir, { recursive: true });
+        await fs.mkdir(captionsDir, { recursive: true });
+        
+        // Leer archivos
+        const videos = await fs.readdir(videosDir).catch(() => []);
+        const audios = await fs.readdir(audiosDir).catch(() => []);
+        const captions = await fs.readdir(captionsDir).catch(() => []);
+        
+        // Obtener stats de archivos
+        const getFileStats = async (dir, files) => {
+            const fileStats = [];
+            for (const file of files) {
+                try {
+                    const filePath = path.join(dir, file);
+                    const stats = await fs.stat(filePath);
+                    fileStats.push({
+                        name: file,
+                        size: Math.round(stats.size / (1024 * 1024) * 100) / 100, // MB
+                        created: stats.birthtime,
+                        type: path.extname(file).substring(1)
+                    });
+                } catch (error) {
+                    // Skip files with errors
+                }
+            }
+            return fileStats.sort((a, b) => new Date(b.created) - new Date(a.created));
+        };
+        
+        const videoFiles = await getFileStats(videosDir, videos.filter(f => f.endsWith('.mp4')));
+        const audioFiles = await getFileStats(audiosDir, audios.filter(f => f.endsWith('.mp3')));
+        const captionFiles = await getFileStats(captionsDir, captions.filter(f => f.endsWith('.txt')));
+        
+        sendSSELog('FILES', `${req.user.username} listando archivos: ${videoFiles.length} videos`, 'info');
+        
+        res.json({
+            success: true,
+            files: {
+                videos: videoFiles,
+                audios: audioFiles,
+                captions: captionFiles
+            },
+            totalVideos: videoFiles.length,
+            totalAudios: audioFiles.length,
+            totalCaptions: captionFiles.length
+        });
+        
+    } catch (error) {
+        console.error('❌ Error listando archivos:', error);
+        sendSSELog('ERROR', `Error listando archivos: ${error.message}`, 'error');
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ===============================
+// DESCARGAR VIDEO
+// ===============================
+app.get('/api/download/video/:filename', auth.requireAuth.bind(auth), async (req, res) => {
+    try {
+        const { filename } = req.params;
+        
+        // Validar filename (seguridad)
+        if (!filename || filename.includes('..') || !filename.endsWith('.mp4')) {
+            return res.status(400).json({ success: false, error: 'Filename inválido' });
+        }
+        
+        const videoPath = path.join(__dirname, '../assets/videos', filename);
+        
+        // Verificar que el archivo existe
+        try {
+            await fs.access(videoPath);
+        } catch (error) {
+            return res.status(404).json({ success: false, error: 'Video no encontrado' });
+        }
+        
+        // Obtener stats del archivo
+        const stats = await fs.stat(videoPath);
+        const fileSizeMB = Math.round(stats.size / (1024 * 1024) * 100) / 100;
+        
+        sendSSELog('DOWNLOAD', `${req.user.username} descargando: ${filename} (${fileSizeMB}MB)`, 'success');
+        
+        // Headers para descarga
+        res.setHeader('Content-Type', 'video/mp4');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', stats.size);
+        
+        // Stream del archivo
+        const fileStream = require('fs').createReadStream(videoPath);
+        fileStream.pipe(res);
+        
+        fileStream.on('error', (error) => {
+            console.error('❌ Error streaming video:', error);
+            if (!res.headersSent) {
+                res.status(500).json({ success: false, error: 'Error descargando video' });
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error descargando video:', error);
+        sendSSELog('ERROR', `Error descarga: ${error.message}`, 'error');
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ===============================
+// DESCARGAR AUDIO
+// ===============================
+app.get('/api/download/audio/:filename', auth.requireAuth.bind(auth), async (req, res) => {
+    try {
+        const { filename } = req.params;
+        
+        if (!filename || filename.includes('..') || !filename.endsWith('.mp3')) {
+            return res.status(400).json({ success: false, error: 'Filename inválido' });
+        }
+        
+        const audioPath = path.join(__dirname, '../assets/audio', filename);
+        
+        try {
+            await fs.access(audioPath);
+        } catch (error) {
+            return res.status(404).json({ success: false, error: 'Audio no encontrado' });
+        }
+        
+        const stats = await fs.stat(audioPath);
+        
+        sendSSELog('DOWNLOAD', `${req.user.username} descargando audio: ${filename}`, 'info');
+        
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', stats.size);
+        
+        const fileStream = require('fs').createReadStream(audioPath);
+        fileStream.pipe(res);
+        
+    } catch (error) {
+        console.error('❌ Error descargando audio:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ===============================
+// DESCARGAR CAPTION
+// ===============================
+app.get('/api/download/caption/:filename', auth.requireAuth.bind(auth), async (req, res) => {
+    try {
+        const { filename } = req.params;
+        
+        if (!filename || filename.includes('..') || !filename.endsWith('.txt')) {
+            return res.status(400).json({ success: false, error: 'Filename inválido' });
+        }
+        
+        const captionPath = path.join(__dirname, '../assets/captions', filename);
+        
+        try {
+            await fs.access(captionPath);
+        } catch (error) {
+            return res.status(404).json({ success: false, error: 'Caption no encontrado' });
+        }
+        
+        sendSSELog('DOWNLOAD', `${req.user.username} descargando caption: ${filename}`, 'info');
+        
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        const fileStream = require('fs').createReadStream(captionPath);
+        fileStream.pipe(res);
+        
+    } catch (error) {
+        console.error('❌ Error descargando caption:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ===============================
+// ELIMINAR ARCHIVO (SOLO ADMIN)
+// ===============================
+app.delete('/api/files/:type/:filename', auth.requireAuth.bind(auth), async (req, res) => {
+    try {
+        const { type, filename } = req.params;
+        
+        // Solo admins pueden eliminar archivos
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Solo admins pueden eliminar archivos' });
+        }
+        
+        let filePath;
+        let validExtensions;
+        
+        switch (type) {
+            case 'video':
+                filePath = path.join(__dirname, '../assets/videos', filename);
+                validExtensions = ['.mp4'];
+                break;
+            case 'audio':
+                filePath = path.join(__dirname, '../assets/audio', filename);
+                validExtensions = ['.mp3'];
+                break;
+            case 'caption':
+                filePath = path.join(__dirname, '../assets/captions', filename);
+                validExtensions = ['.txt'];
+                break;
+            default:
+                return res.status(400).json({ success: false, error: 'Tipo de archivo inválido' });
+        }
+        
+        // Validaciones de seguridad
+        const ext = path.extname(filename).toLowerCase();
+        if (!validExtensions.includes(ext) || filename.includes('..')) {
+            return res.status(400).json({ success: false, error: 'Filename inválido' });
+        }
+        
+        // Eliminar archivo
+        await fs.unlink(filePath);
+        
+        sendSSELog('DELETE', `${req.user.username} eliminó: ${filename}`, 'warning');
+        
+        res.json({ success: true, message: 'Archivo eliminado correctamente' });
+        
+    } catch (error) {
+        console.error('❌ Error eliminando archivo:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 module.exports = { sendSSELog };

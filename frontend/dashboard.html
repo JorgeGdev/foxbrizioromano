@@ -243,6 +243,71 @@
                 </div>
               </div>
 
+              <!-- Files Manager -->
+              <div class="col-12">
+                <div class="dashboard-card p-4">
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="section-title">Generated Files</h3>
+                    <button class="btn btn-secondary-tigrizio btn-sm" onclick="refreshFiles()">
+                      <i class="fas fa-sync"></i> Refresh
+                    </button>
+                  </div>
+
+                  <!-- Files Tabs -->
+                  <ul class="nav nav-tabs mb-3" id="filesTabs">
+                    <li class="nav-item">
+                      <button class="nav-link active" id="videos-tab" data-bs-toggle="tab" data-bs-target="#videos" type="button">
+                        🎬 Videos (<span id="videosCount">0</span>)
+                      </button>
+                    </li>
+                    <li class="nav-item">
+                      <button class="nav-link" id="audios-tab" data-bs-toggle="tab" data-bs-target="#audios" type="button">
+                        🔊 Audios (<span id="audiosCount">0</span>)
+                      </button>
+                    </li>
+                    <li class="nav-item">
+                      <button class="nav-link" id="captions-tab" data-bs-toggle="tab" data-bs-target="#captions" type="button">
+                        📝 Captions (<span id="captionsCount">0</span>)
+                      </button>
+                    </li>
+                  </ul>
+
+                  <!-- Files Content -->
+                  <div class="tab-content" id="filesTabContent">
+                    <!-- Videos Tab -->
+                    <div class="tab-pane fade show active" id="videos">
+                      <div id="videosList" class="files-list">
+                        <div class="text-center text-muted py-4">
+                          <i class="fas fa-video fa-2x mb-2"></i>
+                          <p>No videos generated yet</p>
+                          <small>Generate your first video to see it here</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Audios Tab -->
+                    <div class="tab-pane fade" id="audios">
+                      <div id="audiosList" class="files-list">
+                        <div class="text-center text-muted py-4">
+                          <i class="fas fa-music fa-2x mb-2"></i>
+                          <p>No audios generated yet</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Captions Tab -->
+                    <div class="tab-pane fade" id="captions">
+                      <div id="captionsList" class="files-list">
+                        <div class="text-center text-muted py-4">
+                          <i class="fas fa-file-text fa-2x mb-2"></i>
+                          <p>No captions generated yet</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Real-time Logs -->
               <div class="col-12">
                 <div class="dashboard-card p-4">
