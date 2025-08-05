@@ -55,12 +55,13 @@ class TigrizioBot {
   setupBotHandlers() {
     // Configurar comandos
     this.commandHandler.setupCommands();
-
+    
     // Configurar manejo de mensajes
     this.messageHandler.setupMessageHandler();
-
+    
     // Configurar botones de aprobación
     this.approvalHandler.setupApprovalHandler();
+
 
     console.log("✅ Manejadores configurados");
 
@@ -70,29 +71,26 @@ class TigrizioBot {
   // ===============================
   // MÉTODOS PARA ACCESO DE MÓDULOS
   // ===============================
-
+  
   // Enviar mensaje con formato
   async sendMessage(chatId, text, options = {}) {
-    try {
+  try {
+    return await this.bot.sendMessage(chatId, text, {
+      parse_mode: 'Markdown',
+      ...options
+    });
+  } catch (error) {
+    // Si falla Markdown, intentar sin formato
+    if (error.message.includes("can't parse entities")) {
+      console.log('⚠️ Error de Markdown, enviando sin formato:', error.message);
       return await this.bot.sendMessage(chatId, text, {
-        parse_mode: "Markdown",
         ...options,
+        parse_mode: undefined
       });
-    } catch (error) {
-      // Si falla Markdown, intentar sin formato
-      if (error.message.includes("can't parse entities")) {
-        console.log(
-          "⚠️ Error de Markdown, enviando sin formato:",
-          error.message
-        );
-        return await this.bot.sendMessage(chatId, text, {
-          ...options,
-          parse_mode: undefined,
-        });
-      }
-      throw error;
     }
+    throw error;
   }
+}
 
   // Enviar mensaje al chat principal
   async sendToMainChat(text, options = {}) {
@@ -104,8 +102,8 @@ class TigrizioBot {
     return await this.bot.editMessageText(text, {
       chat_id: chatId,
       message_id: messageId,
-      parse_mode: "Markdown",
-      ...options,
+      parse_mode: 'Markdown',
+      ...options
     });
   }
 
@@ -113,7 +111,7 @@ class TigrizioBot {
   async answerCallback(callbackQueryId, text, showAlert = false) {
     return await this.bot.answerCallbackQuery(callbackQueryId, {
       text: text,
-      show_alert: showAlert,
+      show_alert: showAlert
     });
   }
 
@@ -123,10 +121,7 @@ class TigrizioBot {
   async toggleAutoScraping(chatId, enable) {
     if (enable) {
       if (this.isAutoScrapingActive) {
-        await this.sendMessage(
-          chatId,
-          "⚠️ El scraping automático ya está activo"
-        );
+        await this.sendMessage(chatId, "⚠️ El scraping automático ya está activo");
         return;
       }
 
@@ -136,29 +131,24 @@ class TigrizioBot {
 
       this.isAutoScrapingActive = true;
 
-      await this.sendMessage(
-        chatId,
+      await this.sendMessage(chatId, 
         "🟢 **SCRAPING AUTOMÁTICO ACTIVADO**\n\n" +
-          "⏰ Frecuencia: Cada 3 horas\n" +
-          "🌍 Solo en horarios activos (Europa despierta)\n" +
-          "📱 Recibirás notificaciones automáticas"
+        "⏰ Frecuencia: Cada 3 horas\n" +
+        "🌍 Solo en horarios activos (Europa despierta)\n" +
+        "📱 Recibirás notificaciones automáticas"
       );
     } else {
       if (!this.isAutoScrapingActive) {
-        await this.sendMessage(
-          chatId,
-          "⚠️ El scraping automático ya está inactivo"
-        );
+        await this.sendMessage(chatId, "⚠️ El scraping automático ya está inactivo");
         return;
       }
 
       clearInterval(this.autoScrapingInterval);
       this.isAutoScrapingActive = false;
 
-      await this.sendMessage(
-        chatId,
+      await this.sendMessage(chatId, 
         "🔴 **SCRAPING AUTOMÁTICO DESACTIVADO**\n\n" +
-          "📱 Usa /scrape para scraping manual"
+        "📱 Usa /scrape para scraping manual"
       );
     }
   }
@@ -200,11 +190,11 @@ class TigrizioBot {
     console.log("🚀 Tigrizio Bot modular iniciado correctamente");
     this.sendToMainChat(
       "🐅 **TIGRIZIO BOT MODULAR INICIADO**\n\n" +
-        "🏗️ *Nueva arquitectura escalable*\n" +
-        "📋 *Sistema de validación de scripts*\n" +
-        "⚡ *Optimización de tokens garantizada*\n\n" +
-        "💡 Usa: `tigrizio[1-9]@keyword`\n" +
-        "🔄 Nuevo: Aprobarás scripts antes de generar"
+      "🏗️ *Nueva arquitectura escalable*\n" +
+      "📋 *Sistema de validación de scripts*\n" +
+      "⚡ *Optimización de tokens garantizada*\n\n" +
+      "💡 Usa: `tigrizio[1-9]@keyword`\n" +
+      "🔄 Nuevo: Aprobarás scripts antes de generar"
     );
   }
 
@@ -217,103 +207,126 @@ class TigrizioBot {
   }
 
   setupDebugCommands() {
-    // Comando /debug - Análisis completo
-    // Agrega este comando temporal
-    this.bot.onText(/\/debug1/, async (msg) => {
-      try {
-        const { data, error } = await this.supabase
-          .from("fabrizio_tweets")
-          .insert({
-            tweet_id: "TEST999999",
-            content: "test content",
-            original_text: "test original",
-            tweet_created_at: new Date().toISOString(),
-            likes: 0,
-            retweets: 0,
-            is_vip: false,
-            vip_keyword: null,
-          })
-          .select()
-          .single();
+        // Comando /debug - Análisis completo
+        this.bot.onText(/\/debug/, async (msg) => {
+            try {
+                await this.sendMessage(msg.chat.id, '🔬 DEBUG DETALLADO INICIADO...');
+                
+                // PASO 1: Test TwitterAPI
+                await this.sendMessage(msg.chat.id, '📡 PASO 1: Consultando TwitterAPI...');
+                const tweets = await this.scraper.getRecentTweets(5);
+                
+                await this.sendMessage(msg.chat.id, 
+                    `📊 PASO 1 RESULTADO:\n` +
+                    `• Tweets obtenidos: ${tweets.length}\n` +
+                    `• API Status: ${tweets.length > 0 ? '✅ OK' : '❌ Sin tweets'}`
+                );
+                
+                if (tweets.length > 0) {
+                    // PASO 2: Primer tweet
+                    const firstTweet = tweets[0];
+                    await this.sendMessage(msg.chat.id, 
+                        `🔍 PASO 2 - PRIMER TWEET:\n` +
+                        `• ID: ${firstTweet.id}\n` +
+                        `• Tipo: ${typeof firstTweet.id}\n` +
+                        `• Fecha: ${firstTweet.createdAt}\n` +
+                        `• Texto: ${firstTweet.text.substring(0, 60)}...`
+                    );
+                    
+                    // PASO 3: Verificar duplicados
+                    await this.sendMessage(msg.chat.id, '🔄 PASO 3: Verificando duplicados...');
+                    
+                    let duplicateCount = 0;
+                    let newCount = 0;
+                    const results = [];
+                    
+                    for (let i = 0; i < Math.min(3, tweets.length); i++) {
+                        const tweet = tweets[i];
+                        const exists = await this.db.tweetExists(tweet.id);
+                        
+                        results.push(`${i + 1}. ${tweet.id} → ${exists ? '❌ DUPLICADO' : '✅ NUEVO'}`);
+                        
+                        if (exists) duplicateCount++;
+                        else newCount++;
+                    }
+                    
+                    await this.sendMessage(msg.chat.id, 
+                        `📊 PASO 3 RESULTADO:\n` +
+                        results.join('\n') + '\n\n' +
+                        `📈 RESUMEN:\n` +
+                        `• Duplicados: ${duplicateCount}\n` +
+                        `• Nuevos: ${newCount}`
+                    );
+                }
+                
+                await this.sendMessage(msg.chat.id, '🎯 DEBUG COMPLETADO');
+                
+            } catch (error) {
+                await this.sendMessage(msg.chat.id, `💥 Error debug: ${error.message}`);
+                console.error('Debug error:', error);
+            }
+        });
 
-        await this.sendMessage(
-          msg.chat.id,
-          `🔍 TEST DIRECTO:\n` +
-            `• Resultado: ${error ? "❌ ERROR" : "✅ GUARDADO"}\n` +
-            `• Error: ${error?.message || "None"}\n` +
-            `• Data: ${data?.id || "No data"}`
-        );
-      } catch (error) {
-        await this.sendMessage(msg.chat.id, `❌ Error: ${error.message}`);
-      }
-    });
+        // Comando /checkids - IDs específicos
+        this.bot.onText(/\/checkids/, async (msg) => {
+            try {
+                await this.sendMessage(msg.chat.id, '🔍 VERIFICANDO IDs...');
+                
+                const apiTweets = await this.scraper.getRecentTweets(6);
+                
+                if (apiTweets.length > 0) {
+                    await this.sendMessage(msg.chat.id, `📡 API devolvió ${apiTweets.length} tweets`);
+                    
+                    for (let i = 0; i < Math.min(3, apiTweets.length); i++) {
+                        const tweet = apiTweets[i];
+                        const existsInDB = await this.db.tweetExists(tweet.id);
+                        
+                        await this.sendMessage(msg.chat.id, 
+                            `🔍 TWEET ${i + 1}:\n` +
+                            `• ID: ${tweet.id}\n` +
+                            `• Tipo: ${typeof tweet.id}\n` +
+                            `• En DB: ${existsInDB ? '✅ EXISTE' : '❌ NUEVO'}\n` +
+                            `• Texto: ${tweet.text.substring(0, 50)}...\n` +
+                            `────────────`
+                        );
+                    }
+                } else {
+                    await this.sendMessage(msg.chat.id, '❌ API no devolvió tweets');
+                }
+                
+            } catch (error) {
+                await this.sendMessage(msg.chat.id, `💥 Error IDs: ${error.message}`);
+            }
+        });
 
-    // Comando /checkids - IDs específicos
-    this.bot.onText(/\/checkids/, async (msg) => {
-      try {
-        await this.sendMessage(msg.chat.id, "🔍 VERIFICANDO IDs...");
+        // Comando /status - Estado general
+        this.bot.onText(/\/status/, async (msg) => {
+            try {
+                const dbStats = await this.db.getStats();
+                
+                await this.sendMessage(msg.chat.id, 
+                    `📊 ESTADO TIGRIZIO:\n\n` +
+                    `🗄️ BASE DE DATOS:\n` +
+                    `• Total tweets: ${dbStats.success ? dbStats.stats.total : 'Error'}\n` +
+                    `• VIP tweets: ${dbStats.success ? dbStats.stats.vipCount : 'Error'}\n\n` +
+                    `📡 TWITTER API:\n` +
+                    `• Créditos: 92,185+ disponibles\n\n` +
+                    `🤖 BOT:\n` +
+                    `• Estado: ✅ Operativo\n` +
+                    `• Debug mode: ✅ Activo`
+                );
+                
+            } catch (error) {
+                await this.sendMessage(msg.chat.id, `❌ Error status: ${error.message}`);
+            }
+        });
 
-        const apiTweets = await this.scraper.getRecentTweets(6);
+        console.log("🔬 Comandos de debug configurados");
+    }
 
-        if (apiTweets.length > 0) {
-          await this.sendMessage(
-            msg.chat.id,
-            `📡 API devolvió ${apiTweets.length} tweets`
-          );
-
-          for (let i = 0; i < Math.min(3, apiTweets.length); i++) {
-            const tweet = apiTweets[i];
-            const existsInDB = await this.db.tweetExists(tweet.id);
-
-            await this.sendMessage(
-              msg.chat.id,
-              `🔍 TWEET ${i + 1}:\n` +
-                `• ID: ${tweet.id}\n` +
-                `• Tipo: ${typeof tweet.id}\n` +
-                `• En DB: ${existsInDB ? "✅ EXISTE" : "❌ NUEVO"}\n` +
-                `• Texto: ${tweet.text.substring(0, 50)}...\n` +
-                `────────────`
-            );
-          }
-        } else {
-          await this.sendMessage(msg.chat.id, "❌ API no devolvió tweets");
-        }
-      } catch (error) {
-        await this.sendMessage(msg.chat.id, `💥 Error IDs: ${error.message}`);
-      }
-    });
-
-    // Comando /status - Estado general
-    this.bot.onText(/\/status/, async (msg) => {
-      try {
-        const dbStats = await this.db.getStats();
-
-        await this.sendMessage(
-          msg.chat.id,
-          `📊 ESTADO TIGRIZIO:\n\n` +
-            `🗄️ BASE DE DATOS:\n` +
-            `• Total tweets: ${
-              dbStats.success ? dbStats.stats.total : "Error"
-            }\n` +
-            `• VIP tweets: ${
-              dbStats.success ? dbStats.stats.vipCount : "Error"
-            }\n\n` +
-            `📡 TWITTER API:\n` +
-            `• Créditos: 92,185+ disponibles\n\n` +
-            `🤖 BOT:\n` +
-            `• Estado: ✅ Operativo\n` +
-            `• Debug mode: ✅ Activo`
-        );
-      } catch (error) {
-        await this.sendMessage(
-          msg.chat.id,
-          `❌ Error status: ${error.message}`
-        );
-      }
-    });
-
-    console.log("🔬 Comandos de debug configurados");
-  }
+  
 }
+
+
 
 module.exports = TigrizioBot;
