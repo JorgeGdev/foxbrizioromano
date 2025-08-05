@@ -38,7 +38,7 @@ class TwitterScraper {
         const currentHour = nzTime.getHours();
         
         // Horario activo: 3PM-9AM NZ (15:00-09:00)
-        const isActive = currentHour >= 15 || currentHour < 9;
+        const isActive = currentHour >= 15 || currentHour < 10;
         
         console.log(`⏰ Hora NZ: ${nzTime.toLocaleTimeString()} - Activo: ${isActive ? 'SÍ' : 'NO'}`);
         return isActive;
