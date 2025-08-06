@@ -68,7 +68,7 @@ class SupabaseManager {
             const insertData = {
                 tweet_id: tweetData.id,
                 content: tweetData.text,
-                original_content: tweetData.originalText,
+                original_text: tweetData.originalText,
                 tweet_created_at: tweetData.createdAt,
                 likes: tweetData.likes || 0,
                 retweets: tweetData.retweets || 0,
